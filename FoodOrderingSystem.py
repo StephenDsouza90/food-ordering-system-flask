@@ -245,15 +245,6 @@ class Employee:
         finally:
             session.close()
 
-    def view_revenue_month(self, session):
-        """ View revenue of particular month """
-
-        # Get all orders of a particular month
-        # Sum all those orders
-        # Use CustOrderSelection table
-        # Need to check how to get a range or month
-        pass
-
     def delete_order(self, order_id, session):
         del_status = session.query(CustOrderStatus).filter_by(order_id=order_id).delete()
         del_selection = session.query(CustOrderSelection).filter_by(order_id=order_id).delete()
@@ -336,7 +327,21 @@ class Customer:
         finally:
             session.expunge_all()
             session.close()
-        
+
+    def remove_food_to_order(self, order_id, food_id, session):
+        """ Remove food items """
+
+        remove = session.query(CustOrderSelection).filter_by(order_id=order_id).filter_by(food_id=food_id).delete()
+        try:
+            session.commit()
+            return remove
+        except:
+            session.rollback()
+            raise Exception("Remove not completed!")
+        finally:
+            session.expunge_all()
+            session.close()
+
     def view_order_per_item(self, order_id, session):
         """ Customer can view their orders before checkout/confirming order """
 
@@ -371,6 +376,7 @@ class Customer:
 
     def checkout(self, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session):
         """ Customer can checkout/confirm order """
+
         checkout_update = session.query(
             CustOrderStatus
             ).filter(CustOrderStatus.order_id == order_id
@@ -732,8 +738,13 @@ def main():
                             print("Order not sucessful. Please try again!")
                   
                     elif order == 3:
-                        pass
-                    # To fill
+                        food_id = input("Enter food ID: ")
+                        session = fos.Session()
+                        remove = fos.customer.remove_food_to_order(o.order_id, food_id, session)
+                        if remove:
+                            print("Items removed")
+                        else:
+                            print("Items not removed")
 
                     elif order == 4:
                         order_id = input("Enter order ID: ")
