@@ -253,6 +253,17 @@ class Employee:
 class Customer:
     """ Customer's end operation """    
 
+    def view_menu(self, session):
+        """ Customer can view menu """
+
+        try:
+            menu = session.query(FoodCategory, FoodDetails).filter(FoodCategory.category_id == FoodDetails.category_id).all()
+            return menu
+        except Exception as ex:
+            print("Error getting menu, error={}".format(str(ex)))
+        finally:
+            session.close()            
+
     def customer_signup(self, cust_name, cust_phone, cust_email, session):
         """ Add a new customer """
 
@@ -279,17 +290,6 @@ class Customer:
             session.close()
         return login    
          
-    def view_menu(self, session):
-        """ Customer can view menu """
-
-        try:
-            menu = session.query(FoodCategory, FoodDetails).filter(FoodCategory.category_id == FoodDetails.category_id).all()
-            return menu
-        except Exception as ex:
-            print("Error getting menu, error={}".format(str(ex)))
-        finally:
-            session.close()            
-
     def create_order_id(self, cust_id, session): 
         """ Generate order id """
 
@@ -505,6 +505,19 @@ class Controller(SQLiteBackend):
         self.employee.delete_order(order_id, session)
         print("Order {} deleted!".format(order_id))
 
+    def view_menu(self, session):
+        menu = self.customer.view_menu(session)
+        for fc, fd in menu:
+            print("\nFood ID: {} \nFood category: {} \nFood name: {} \nFood price: {}".format(fd.food_id, fc.name, fd.food_name, fd.price))
+
+    def customer_signup(self, cust_name, cust_phone, cust_email, session):
+        c = self.customer.customer_signup(cust_name, cust_phone, cust_email, session)
+        if c:
+            print("\nCustomer ID: {} \nCustomer name: {} \nCustomer phone number: {} \nCustomer email address: {} \nSucessfully!".format(c.cust_id, c.cust_name, c.cust_phone, c.cust_email))
+        else:
+            print("Adding details was not sucessfully. Please try again!")    
+
+
 class DeliveryPerson(Base, Employee):
     """ Represents delivery person """
 
@@ -698,20 +711,14 @@ def main():
 
             if customer_options == 1:
                 session = fos.Session()
-                menu = fos.customer.view_menu(session)
-                for c, d in menu:
-                    print("\nFood ID: {} \nFood category: {} \nFood name: {} \nFood price: {}".format(d.food_id, c.name, d.food_name, d.price))
+                fos.view_menu(session)
 
             elif customer_options == 2:
                 cust_name = input("Enter customer name: ")
                 cust_phone = input("Enter customer phone number: ")
                 cust_email = input("Enter customer email address: ")
                 session = fos.Session()
-                c = fos.customer.customer_signup(cust_name, cust_phone, cust_email, session)
-                if c:
-                    print("\nCustomer ID: {} \nCustomer name: {} \nCustomer phone number: {} \nCustomer email address: {} \nSucessfully!".format(c.cust_id, c.cust_name, c.cust_phone, c.cust_email))
-                else:
-                    print("Adding details was not sucessfully. Please try again!")    
+                fos.customer_signup(cust_name, cust_phone, cust_email, session)
 
             elif customer_options == 3:
                 cust_id = input("Enter customer ID: ")
