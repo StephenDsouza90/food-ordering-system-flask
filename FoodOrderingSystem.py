@@ -62,6 +62,7 @@ class CustOrderStatus(Base):
     estimated_time = Column(DateTime, default=datetime.utcnow)
     order_status = Column(String(30))
     order_address = Column(String(30))
+    bill_amount = Column(Integer())
 
 class SQLiteBackend(object):
     """ Represents SQLite Backend that manages creating the engine and session """
@@ -101,11 +102,11 @@ class Employee:
     """ Restaurant's end operation """
 
     # Other functions that can be added
-        # View order and status by customer id
-        # View all orders/status
-        # Delete and update food category and food details and delivery person
-        # View checkout orders/en route orders/ delieverd orders
-        # View revenue of a particular date/month
+        # Delete and update food category, food details and delivery person
+        # View orders and status by customer id
+        # View every orders and status
+        # View only checkout orders, en route orders or delieverd orders
+        # View revenue of a particular date or month (between periods)
 
     def add_food_category(self, category_name, session):
         """ Insert a new food category """
@@ -218,15 +219,27 @@ class Employee:
     def view_revenue_today(self, order_status, session):
         """ View revenue of today """
 
-        # Still to be computed
         try:
-            revenue_today = session.query(FoodDetails, CustOrderSelection, CustomerDetails, CustOrderStatus).\
+            revenue_today = session.query(CustOrderStatus, CustomerDetails).\
             filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-            filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
-            filter(CustOrderSelection.food_id == FoodDetails.food_id).\
+            filter(CustOrderStatus.order_status == order_status).\
+            filter(CustOrderStatus.checkout_time <= datetime.today()).\
+            group_by(CustOrderStatus.order_id)
+            return revenue_today
+        except Exception as ex:
+            print("Error getting order, error={}".format(str(ex)))
+        finally:
+            session.close()
+
+    def sum_revenue(self, order_status, session):
+        """ View revenue of today """
+
+        try:
+            revenue = session.query(CustOrderStatus, CustomerDetails, func.sum(CustOrderStatus.bill_amount)).\
+            filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
             filter(CustOrderStatus.order_status == order_status).\
             filter(CustOrderStatus.checkout_time <= datetime.today())
-            return revenue_today
+            return revenue
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
         finally:
@@ -241,11 +254,22 @@ class Employee:
         # Need to check how to get a range or month
         pass
 
-    def delete_order(self, session):
-        pass
+    def delete_order(self, order_id, session):
+        del_status = session.query(CustOrderStatus).filter_by(order_id=order_id).delete()
+        del_selection = session.query(CustOrderSelection).filter_by(order_id=order_id).delete()
+        try:
+            session.commit()
+            return del_status, del_selection            
+        except IntegrityError:
+            session.rollback()
+            raise Exception("Order not deleted!")
+        finally:
+            session.expunge_all()
+            session.close()        
 
 class Customer:
     """ Customer's end operation """    
+
     def customer_signup(self, cust_name, cust_phone, cust_email, session):
         """ Add a new customer """
 
@@ -345,17 +369,17 @@ class Customer:
         finally:
             session.close()
 
-    def checkout(self, cust_id, order_status, order_address, checkout_time, estimated_time, session):
+    def checkout(self, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session):
         """ Customer can checkout/confirm order """
-
         checkout_update = session.query(
             CustOrderStatus
-            ).filter(CustOrderStatus.cust_id == cust_id
+            ).filter(CustOrderStatus.order_id == order_id
             ).update(
                 {CustOrderStatus.order_status: order_status, 
                 CustOrderStatus.order_address: order_address, 
                 CustOrderStatus.checkout_time: checkout_time,
-                CustOrderStatus.estimated_time: estimated_time}, 
+                CustOrderStatus.estimated_time: estimated_time,
+                CustOrderStatus.bill_amount: bill_amount}, 
                 synchronize_session=False
                 )
         try:
@@ -368,21 +392,25 @@ class Customer:
             session.expunge_all()
             session.close()
 
-    def delete_order(self, order_id, session):
-        """ Delete complete order """
+    def cancel_order(self, order_id, order_status, session):
+        """ Cancel order """
 
-        # To be changed
-        del_order = session.query(CustOrderStatus).filter_by(order_id=order_id).delete()
-        dele = session.query(CustOrderSelection).filter_by(order_id=order_id).delete()
+        update = session.query(
+            CustOrderStatus
+            ).filter(CustOrderStatus.order_id == order_id
+            ).update(
+                {CustOrderStatus.order_status: order_status}, 
+                synchronize_session=False
+                )
         try:
             session.commit()
-            return del_order, dele            
-        except IntegrityError:
+            return update
+        except:
             session.rollback()
-            raise Exception("Order not deleted!")
+            raise Exception("Checkout not completed!")
         finally:
             session.expunge_all()
-            session.close()        
+            session.close()
 
     def view_orders_status(self, order_id, session):
         """ Customer can view their orders after checkout/confirming order """
@@ -475,8 +503,7 @@ def main():
         6. View order details
         7. View order status
         8. View revenue today
-        9. View revenue month
-        10. Delete order
+        9. Delete order
     
         Your Option:
 
@@ -591,35 +618,34 @@ def main():
                 3. Delivered
                 
                 Your option:                 
+
                 """
                 
                 options = int(input(select))
-
                 if options == 1:
                     order_status = "Checkedout"
-                    print("No orders remaining in Checkedout")
                 elif options == 2:
                     order_status = "En route"
-                    print("No orders remaining in En route")
                 else:
                     order_status = "Delivered"
 
                 session = fos.Session()
                 view_rev_today = fos.employee.view_revenue_today(order_status, session)
                 if view_rev_today:
-                    for fd, cos, cd, cost in view_rev_today:
-                        print("\nCustomer name: {} \nOrder ID: {} \nOrder Status: {}".format(cd.cust_name, cos.order_id, cost.order_status))
+                    for cos, cd in view_rev_today:
+                        print("\nCustomer name: {} \nOrder ID: {} \nOrder Status: {} \nBill amount: {} \nDay/Date: {}".format(cd.cust_name, cos.order_id, cos.order_status, cos.bill_amount, cos.checkout_time))
 
-                    print("\nToday's revenue: ") # fd.price
-            # figure out how to use total revenue
-
-            elif employee_options == 9:
-                pass
-            # To fill
+                session2 = fos.Session()
+                sum_rev_today = fos.employee.sum_revenue(order_status, session2)
+                if sum_rev_today:
+                    for cos, cd, s in sum_rev_today:
+                        print("\nToday's revenue: {}".format(s))
                 
-            elif employee_options == 10:
-                pass
-            # To fill
+            elif employee_options == 9:
+                order_id = input("Enter order ID: ")
+                session = fos.Session()
+                d = fos.employee.delete_order(order_id, session)
+                print("Order {} deleted!".format(order_id))
 
             employee_options = int(input("\nYour option: "))
             
@@ -677,7 +703,7 @@ def main():
                 3. Remove food to order
                 4. View order
                 5. Checkout
-                6. Delete order
+                6. Cancel order
                 7. View order status
                 
                 Select option: 
@@ -715,7 +741,7 @@ def main():
                         view_menu_item = fos.customer.view_order_per_item(order_id, session)
                         if view_menu_item:
                             for fc, fd, cos, cd, cosa in view_menu_item:
-                                print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nTotal per item: {}".format(fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))  
+                                print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nTotal per item: {}".format(fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))
                         session2 = fos.Session()
                         view_menu_grand = fos.customer.view_order_grand_total(order_id, session2)
                         if view_menu_grand:
@@ -723,6 +749,7 @@ def main():
                                 print("\nCustomer name: {} \nOrder ID: {} \nTotal bill: {}".format(cd.cust_name, cosa.order_id, t))
                 
                     elif order == 5:
+                        order_id = input("Enter order ID: ")
                         order_address = input("Enter delivery address: ")
                         checkout = int(input("Press 1 to checkout: "))
                         if checkout == 1:
@@ -730,8 +757,15 @@ def main():
                         checkout_time = datetime.now()
                         delivery_time = timedelta(minutes=30)
                         estimated_time = checkout_time + delivery_time
+
+                        session2 = fos.Session()
+                        view_menu_grand = fos.customer.view_order_grand_total(order_id, session2)
+                        if view_menu_grand:
+                            for fc, fd, cos, cd, cosa, t in view_menu_grand:
+                                bill_amount = t
+
                         session = fos.Session()
-                        c = fos.customer.checkout(c.cust_id, order_status, order_address, checkout_time, estimated_time, session) 
+                        c = fos.customer.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session) 
                         if c:
                             print("Checkout sucessful!")
                         else:
@@ -739,10 +773,15 @@ def main():
 
                     elif order == 6:
                         order_id = input("Enter order ID: ")
+                        cancel = int(input("Press 1 to cancel: "))
+                        if cancel == 1:
+                            order_status = "Canceled"
                         session = fos.Session()
-                        d = fos.customer.delete_order(order_id, session)
-                        print("Order {} deleted!".format(order_id))
-                    # in delete the status must get updated to delete
+                        c = fos.customer.cancel_order(order_id, order_status, session) 
+                        if c:
+                            print("Cancel sucessful!")
+                        else:
+                            print("Cancel not sucessful!") 
 
                     elif order == 7:
                         order_id = input("Enter order ID: ")
