@@ -444,6 +444,13 @@ class Controller(SQLiteBackend):
         self.customer = Customer()
         self.delivery_person = DeliveryPerson()
 
+    def add_food_category(self, category_name, session):
+        c = self.employee.add_food_category(category_name, session)
+        if c:
+            print("\nCategory ID: {} \nCategory Name: {} \nSucessfully!".format(c.category_id, c.name))
+        else:
+            print("Adding details was not sucessfully. Please try again!")    
+
 class DeliveryPerson(Base, Employee):
     """ Represents delivery person """
 
@@ -522,11 +529,7 @@ def main():
             if employee_options == 1:
                 category_name = input("Enter category name: ")
                 session = fos.Session()
-                c = fos.employee.add_food_category(category_name, session)
-                if c:
-                    print("\nCategory ID: {} \nCategory Name: {} \nSucessfully!".format(c.category_id, c.name))
-                else:
-                    print("Adding details was not sucessfully. Please try again!")    
+                fos.add_food_category(category_name, session)
 
             elif employee_options == 2:
                 category_id = input ("Enter category ID: ")
