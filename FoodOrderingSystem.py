@@ -47,7 +47,7 @@ class CustOrderSelection(Base):
     __tablename__ = 'customer_order_selection'
 
     order_id = Column(Integer(), ForeignKey('customer_order_status.order_id'), primary_key=True, nullable=False)
-    food_id = Column(Integer(), ForeignKey('food_details.food_id'), primary_key=True) 
+    food_id = Column(Integer(), ForeignKey('food_details.food_id'), primary_key=True)  
     food_qty = Column(Integer())
 
 class CustOrderStatus(Base):
@@ -101,13 +101,6 @@ class SQLiteBackend(object):
 class Employee:
     """ Restaurant's end operation """
 
-    # Other functions that can be added
-        # Delete and update food category, food details and delivery person
-        # View orders and status by customer id
-        # View every orders and status
-        # View only checkout orders, en route orders or delieverd orders
-        # View revenue of a particular date or month (between periods)
-
     def add_food_category(self, category_name, session):
         """ Insert a new food category """
 
@@ -156,7 +149,10 @@ class Employee:
     def assign_deliver_person_to_deliver_order(self, order_id, delivery_person_id, session):
         """ Update CustOrderStatus table to add deliver person to deliver order """
 
-        update = session.query(CustOrderStatus).filter(CustOrderStatus.order_id == order_id).update({CustOrderStatus.delivery_person_id: delivery_person_id}, synchronize_session=False)
+        update = session.query(CustOrderStatus
+            ).filter(CustOrderStatus.order_id == order_id
+            ).update({CustOrderStatus.delivery_person_id: delivery_person_id
+            }, synchronize_session=False)
         try:
             session.commit()
             return update
@@ -238,6 +234,8 @@ class Employee:
             session.close()
 
     def delete_order(self, order_id, session):
+        """ Delete order """
+
         del_status = session.query(CustOrderStatus).filter_by(order_id=order_id).delete()
         del_selection = session.query(CustOrderSelection).filter_by(order_id=order_id).delete()
         try:
@@ -293,11 +291,11 @@ class Customer:
     def create_order_id(self, cust_id, session): 
         """ Generate order id """
 
-        order = CustOrderStatus(cust_id=cust_id)
-        session.add(order)
+        order_status = CustOrderStatus(cust_id=cust_id)
+        session.add(order_status)
         try:
             session.commit()
-            return order
+            return order_status
         except:
             session.rollback()
             raise Exception("Order ID not created!")
@@ -319,7 +317,7 @@ class Customer:
         finally:
             session.expunge_all()
             session.close()
-
+    
     def remove_food_to_order(self, order_id, food_id, session):
         """ Remove food items """
 
@@ -334,16 +332,32 @@ class Customer:
             session.expunge_all()
             session.close()
 
+    def update_food_to_order(self, order_id, food_id, food_qty, session):
+        """ Update food items """
+
+        update = session.query(CustOrderSelection
+            ).filter(CustOrderSelection.order_id == order_id
+            ).filter(CustOrderSelection.food_id == food_id
+            ).update({CustOrderSelection.food_qty: food_qty
+            }, synchronize_session=False)
+        try:
+            session.commit()
+            return update
+        except:
+            session.rollback()
+            raise Exception("Remove not completed!")
+        finally:
+            session.expunge_all()
+            session.close()
+
     def view_order_per_item(self, order_id, session):
-        """ Customer can view their orders before checkout/confirming order """
+        """ Customer can view their orders with price per item before checkout/confirming order """
 
         try:
-            view = session.query(FoodCategory, FoodDetails, CustOrderSelection, CustomerDetails, CustOrderStatus).\
-                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(CustOrderSelection.food_id == FoodDetails.food_id).\
+            view = session.query(FoodCategory, FoodDetails, CustOrderSelection).\
                 filter(FoodCategory.category_id == FoodDetails.category_id).\
-                filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
-                filter(CustOrderStatus.order_id == order_id)            
+                filter(CustOrderSelection.food_id == FoodDetails.food_id).\
+                filter(CustOrderSelection.order_id == order_id)            
             return view
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -351,15 +365,14 @@ class Customer:
             session.close()
 
     def view_order_grand_total(self, order_id, session):
-        """ Customer can view their orders before checkout/confirming order """
+        """ Customer can view their orders with grand total before checkout/confirming order """
 
         try:
-            view = session.query(FoodCategory, FoodDetails, CustOrderSelection, CustomerDetails, CustOrderStatus, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
-                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+            view = session.query(FoodDetails, CustOrderSelection, CustomerDetails, CustOrderStatus, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
                 filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                filter(FoodCategory.category_id == FoodDetails.category_id).\
                 filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
-                filter(CustOrderStatus.order_id == order_id)            
+                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+                filter(CustOrderSelection.order_id == order_id)            
             return view
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -411,13 +424,11 @@ class Customer:
             session.close()
 
     def view_orders_status(self, order_id, session):
-        """ Customer can view their orders after checkout/confirming order """
+        """ Customer can view their orders and status after checkout/confirming order """
 
         try:
-            view = session.query(FoodCategory, FoodDetails, CustOrderSelection, CustomerDetails, CustOrderStatus, DeliveryPerson, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
+            view = session.query(CustOrderSelection, CustomerDetails, CustOrderStatus, DeliveryPerson).\
                 filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                filter(FoodCategory.category_id == FoodDetails.category_id).\
                 filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
                 filter(DeliveryPerson.delivery_person_id == CustOrderStatus.delivery_person_id).\
                 filter(CustOrderStatus.order_id == order_id)
@@ -517,6 +528,101 @@ class Controller(SQLiteBackend):
         else:
             print("Adding details was not sucessfully. Please try again!")    
 
+    def customer_login(self, cust_id, session):
+        c = self.customer.customer_login(cust_id, session)
+        if c:
+            print("Login successful! \nWelcome {} \nCustomer ID {}".format(c.cust_name, c.cust_id))
+        else:
+            print("Login not sucessfully. Please try again or signup!")
+            return
+
+    def process_order(self, cust_id, session):
+        o = self.customer.create_order_id(cust_id, session)
+        selection = """ 
+
+            0. Back
+            1. Add food to order
+            2. Remove food to order
+            3. Update food to order
+                
+            Select option: 
+
+            """
+        option = int(input(selection))
+
+        while option != 0:
+            
+            if option == 1:
+                food_id = input("Enter food ID: ")
+                food_qty = input("Enter food quantity: ")
+                session = self.Session()
+                add = self.customer.add_food_to_order(o.order_id, food_id, food_qty, session)
+                if add:
+                    print("Add successful!")
+                else:
+                    print("Add not successful. Please try again!")
+
+            elif option == 2:
+                food_id = input("Enter food ID: ")
+                session = self.Session()
+                remove = self.customer.remove_food_to_order(o.order_id, food_id, session)
+                if remove:
+                    print("Items removed")
+                else:
+                    print("Items not removed")
+
+            elif option == 3:
+                food_id = input("Enter food ID: ")
+                food_qty = input("Enter food quantity: ")
+                session = self.Session()
+                update = self.customer.update_food_to_order(o.order_id, food_id, food_qty, session)
+                if update:
+                    print("Items updated")
+                else:
+                    print("Items not updated")
+
+            option = int(input("\nSelect option: "))
+        
+        if o:
+            print("\nYour order is generated. \nOrder number: {}".format(o.order_id))
+        else:
+            print("Order not generated. Please try again!")
+
+    def view_order(self, order_id, session):
+        view_order_item = self.customer.view_order_per_item(order_id, session)
+        if view_order_item:
+            for fc, fd, cos in view_order_item:
+                print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nTotal per item: {}".format(fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))
+
+        view_order_grand = self.customer.view_order_grand_total(order_id, session)
+        if view_order_grand:
+            for fd, cos, cd, cosa, t in view_order_grand:
+                print("\nCustomer name: {} \nOrder ID: {} \nTotal bill: {}".format(cd.cust_name, cosa.order_id, t))
+
+    def checkout(self, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session):
+        c = self.customer.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session) 
+        if c:
+            print("Checkout sucessful!")
+        else:
+            print("Checkout not sucessful!") 
+
+    def cancel_order(self, order_id, order_status, session):
+        c = self.customer.cancel_order(order_id, order_status, session) 
+        if c:
+            print("Cancel sucessful!")
+        else:
+            print("Cancel not sucessful!") 
+        
+    def view_orders_status(self, order_id, session):
+        view_order_item = self.customer.view_order_per_item(order_id, session)
+        if view_order_item:
+            for fc, fd, cos in view_order_item:
+                print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nTotal per item: {}".format(fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))
+                        
+        view_status = self.customer.view_orders_status(order_id, session)
+        if view_status:
+            for cos, cd, cosa, dp in view_status:                        
+                print("\nCustomer name: {} \nOrder ID: {} \nDeliver person name: {} \nOrder status: {} \nTotal price: {}".format(cd.cust_name, cosa.order_id, dp.delivery_person_name, cosa.order_status, cosa.bill_amount))
 
 class DeliveryPerson(Base, Employee):
     """ Represents delivery person """
@@ -723,24 +829,16 @@ def main():
             elif customer_options == 3:
                 cust_id = input("Enter customer ID: ")
                 session = fos.Session()
-                c = fos.customer.customer_login(cust_id, session)
-                if c:
-                    print("\nCustomer ID {} login successful! \nWelcome {}".format(c.cust_id, c.cust_name))
-                else:
-                    print("Login not sucessfully. Please try again or signup!")
-                    return    
+                fos.customer_login(cust_id, session)
 
                 selection = """ 
-                Please select food items!
 
                 0. Logout
-                1. Create order
-                2. Add food to order
-                3. Remove food to order
-                4. View order
-                5. Checkout
-                6. Cancel order
-                7. View order status
+                1. Process order
+                2. View order
+                3. Checkout
+                4. Cancel order
+                5. View order status
                 
                 Select option: 
 
@@ -751,90 +849,44 @@ def main():
 
                     if order == 1:
                         session = fos.Session()
-                        o = fos.customer.create_order_id(c.cust_id, session)
-                        if o:
-                            print("\nOrder ID {} generated! Please proceed to making an order.".format(o.order_id))
-                        else:
-                            print("Order ID not generated. Please try again!")
+                        fos.process_order(cust_id, session)
 
                     elif order == 2:
-                        food_id = input("Enter food ID: ")
-                        food_qty = input("Enter quantity: ")
-                        session = fos.Session()
-                        a = fos.customer.add_food_to_order(o.order_id, food_id, food_qty, session)
-                        if a:
-                            print("Order sucessful!")
-                        else:
-                            print("Order not sucessful. Please try again!")
-                  
-                    elif order == 3:
-                        food_id = input("Enter food ID: ")
-                        session = fos.Session()
-                        remove = fos.customer.remove_food_to_order(o.order_id, food_id, session)
-                        if remove:
-                            print("Items removed")
-                        else:
-                            print("Items not removed")
-
-                    elif order == 4:
                         order_id = input("Enter order ID: ")
                         session = fos.Session()
-                        view_menu_item = fos.customer.view_order_per_item(order_id, session)
-                        if view_menu_item:
-                            for fc, fd, cos, cd, cosa in view_menu_item:
-                                print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nTotal per item: {}".format(fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))
-                        session2 = fos.Session()
-                        view_menu_grand = fos.customer.view_order_grand_total(order_id, session2)
-                        if view_menu_grand:
-                            for fc, fd, cos, cd, cosa, t in view_menu_grand:
-                                print("\nCustomer name: {} \nOrder ID: {} \nTotal bill: {}".format(cd.cust_name, cosa.order_id, t))
+                        fos.view_order(order_id, session)
+                    # Problem - A customer can look at any order using the order ID. Need to relook how to solve this.
                 
-                    elif order == 5:
+                    elif order == 3:
                         order_id = input("Enter order ID: ")
                         order_address = input("Enter delivery address: ")
-                        checkout = int(input("Press 1 to checkout: "))
+                        checkout = int(input("Press 1 to confirm checkout: "))
                         if checkout == 1:
                             order_status = "Checkedout"
                         checkout_time = datetime.now()
                         delivery_time = timedelta(minutes=30)
                         estimated_time = checkout_time + delivery_time
-
-                        session2 = fos.Session()
-                        view_menu_grand = fos.customer.view_order_grand_total(order_id, session2)
-                        if view_menu_grand:
-                            for fc, fd, cos, cd, cosa, t in view_menu_grand:
+                        session = fos.Session()
+                        view_grand_total = fos.customer.view_order_grand_total(order_id, session)
+                        if view_grand_total:
+                            for fd, cos, cd, cosa, t in view_grand_total:
                                 bill_amount = t
+                        fos.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session)
+                    # Problem - A customer can look at any order using the order ID. Need to relook how to solve this.
 
-                        session = fos.Session()
-                        c = fos.customer.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session) 
-                        if c:
-                            print("Checkout sucessful!")
-                        else:
-                            print("Checkout not sucessful!") 
-
-                    elif order == 6:
+                    elif order == 4:
                         order_id = input("Enter order ID: ")
-                        cancel = int(input("Press 1 to cancel: "))
+                        cancel = int(input("Press 1 to confirm cancellation: "))
                         if cancel == 1:
-                            order_status = "Canceled"
+                            order_status = "Cancelled"
                         session = fos.Session()
-                        c = fos.customer.cancel_order(order_id, order_status, session) 
-                        if c:
-                            print("Cancel sucessful!")
-                        else:
-                            print("Cancel not sucessful!") 
+                        fos.cancel_order(order_id, order_status, session) 
+                    # Problem - A customer can look at any order using the order ID. Need to relook how to solve this.
 
-                    elif order == 7:
+                    elif order == 5:
                         order_id = input("Enter order ID: ")
                         session = fos.Session()
-                        view_menu_item = fos.customer.view_order_per_item(order_id, session)
-                        if view_menu_item:
-                            for fc, fd, cos, cd, cosa in view_menu_item:
-                                print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nTotal per item: {}".format(fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))                        
-                        view_status = fos.customer.view_orders_status(order_id, session)
-                        if view_status:
-                            for fc, fd, cos, cd, cosa, dp, t in view_status:                        
-                                print("\nCustomer name: {} \nOrder ID: {} \nDeliver person name: {} \nOrder status: {} \nTotal price: {}".format(cd.cust_name, cosa.order_id, dp.delivery_person_name, cosa.order_status, t))
+                        fos.view_orders_status(order_id, session)
 
                     order = int(input("\nSelect option: "))               
 
