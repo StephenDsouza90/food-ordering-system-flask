@@ -1,6 +1,39 @@
 import time
 import datetime
 
+EMP_OPT_UO_EN_ROUTE = 1
+EMP_OPT_UO_DELIVERED = 2
+
+EMP_OPT_RT_CHECKEDOUT = 1
+EMP_OPT_RT_EN_ROUTE = 2
+
+EMP_OPT_ADD_FOOD_CATEGORY = 1
+EMP_OPT_ADD_FOOD_DETAILS = 2
+EMP_OPT_ADD_DELIVERY_PERSON = 3
+EMP_OPT_ASSIGN_DELIVERY_PERSON_TO_ORDER = 4 
+EMP_OPT_UPDATE_ORDER = 5
+EMP_OPT_VIEW_ORDER_DETAILS = 6
+EMP_OPT_VIEW_ORDER_STATUS = 7
+EMP_OPT_VIEW_REVENUE_TODAY = 8
+EMP_OPT_DELETE_ORDER = 9
+
+CUST_OPT_ADD_FOOD_TO_ORDER = 1
+CUST_OPT_REMOVE_FOOD_TO_ORDER = 2
+CUST_OPT_UPDATE_FOOD_TO_ORDER = 3
+
+CUST_OPT_PROCESS_ORDER = 1
+CUST_OPT_VIEW_ORDER = 2
+CUST_OPT_CHECKOUT = 3
+CUST_OPT_CANCEL_ORDER = 4
+CUST_OPT_VIEW_ORDER_STATUS = 5
+
+CUST_OPT_VIEW_MENU = 1
+CUST_OPT_CUSTOMER_SIGNUP = 2
+CUST_OPT_CUSTOMER_LOGIN = 3
+
+EMPLOYEE = 1
+CUSTOMER = 2
+
 from datetime import datetime, timedelta
 
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
@@ -549,21 +582,21 @@ class Controller(SQLiteBackend):
     def process_order(self, cust_id):
         session = self.Session()
         o = self.customer.create_order_id(cust_id, session)
-        selection = """ 
-
-            0. Back
-            1. Add food to order
-            2. Remove food to order
-            3. Update food to order
+        selection = """
+        
+        0. Back
+        1. Add food to order
+        2. Remove food to order
+        3. Update food to order
                 
-            Select option: 
+        Select option: 
 
-            """
+        """
         option = int(input(selection))
 
         while option != 0:
             
-            if option == 1:
+            if option == CUST_OPT_ADD_FOOD_TO_ORDER:
                 food_id = input("Enter food ID: ")
                 food_qty = input("Enter food quantity: ")
                 add = self.customer.add_food_to_order(o.order_id, food_id, food_qty, session)
@@ -572,7 +605,7 @@ class Controller(SQLiteBackend):
                 else:
                     print("Add not successful. Please try again!")
 
-            elif option == 2:
+            elif option == CUST_OPT_REMOVE_FOOD_TO_ORDER:
                 food_id = input("Enter food ID: ")
                 remove = self.customer.remove_food_to_order(o.order_id, food_id, session)
                 if remove:
@@ -580,7 +613,7 @@ class Controller(SQLiteBackend):
                 else:
                     print("Items not removed")
 
-            elif option == 3:
+            elif option == CUST_OPT_UPDATE_FOOD_TO_ORDER:
                 food_id = input("Enter food ID: ")
                 food_qty = input("Enter food quantity: ")
                 update = self.customer.update_food_to_order(o.order_id, food_id, food_qty, session)
@@ -635,6 +668,7 @@ class Controller(SQLiteBackend):
         if view_status:
             for cos, cd, cosa, dp in view_status:                        
                 print("\nCustomer name: {} \nOrder ID: {} \nDeliver person name: {} \nOrder status: {} \nTotal price: {}".format(cd.cust_name, cosa.order_id, dp.delivery_person_name, cosa.order_status, cosa.bill_amount))
+    # Printing it 3 times - need to review.
 
 class DeliveryPerson(Base, Employee):
     """ Represents delivery person """
@@ -690,27 +724,27 @@ def process_employee_options_flow(fos):
 
     while employee_options != 0:
 
-        if employee_options == 1:
+        if employee_options == EMP_OPT_ADD_FOOD_CATEGORY:
             category_name = input("Enter category name: ")
             fos.add_food_category(category_name)
 
-        elif employee_options == 2:
+        elif employee_options == EMP_OPT_ADD_FOOD_DETAILS:
             category_id = input ("Enter category ID: ")
             food_name = input("Enter food name: ")
             price = input("Food price: ")
             fos.add_food_details(category_id, food_name, price)
 
-        elif employee_options == 3:
+        elif employee_options == EMP_OPT_ADD_DELIVERY_PERSON:
             delivery_person_name = input("Enter delivery person name: ")
             delivery_person_phone = input("Enter delivery person phone: ")
             fos.add_delivery_person(delivery_person_name, delivery_person_phone)
 
-        elif employee_options == 4:
+        elif employee_options == EMP_OPT_ASSIGN_DELIVERY_PERSON_TO_ORDER:
             order_id = input("Enter order ID: ")
             delivery_person_id = input("Enter delivery person ID: ")
             fos.assign_deliver_person_to_deliver_order(order_id, delivery_person_id) 
 
-        elif employee_options == 5:
+        elif employee_options == EMP_OPT_UPDATE_ORDER:
             order_id = input("Enter order ID: ")
             select = """                 
             To update order, press
@@ -723,25 +757,25 @@ def process_employee_options_flow(fos):
             """
                 
             options = int(input(select))
-            if options == 1:
+            if options == EMP_OPT_UO_EN_ROUTE:
                 order_status = "En route"
                 fos.update_order(order_id, order_status) 
 
-            if options == 2:
+            elif options == EMP_OPT_UO_DELIVERED:
                 order_status = "Delivered"
                 fos.update_order(order_id, order_status)
 
-        elif employee_options == 6:
+        elif employee_options == EMP_OPT_VIEW_ORDER_DETAILS:
             order_id = input("Enter order ID: ")
             fos.view_orders(order_id)
             fos.view_order_grand_total(order_id)
 
-        elif employee_options == 7:
+        elif employee_options == EMP_OPT_VIEW_ORDER_STATUS:
             order_id = input("Enter order ID: ")
             fos.view_order_status(order_id)
             fos.view_orders(order_id)
 
-        elif employee_options == 8:
+        elif employee_options == EMP_OPT_VIEW_REVENUE_TODAY:
             select = """ 
             To see revenue for a certain status, please press 
                 
@@ -753,16 +787,16 @@ def process_employee_options_flow(fos):
 
             """                
             options = int(input(select))
-            if options == 1:
+            if options == EMP_OPT_RT_CHECKEDOUT:
                 order_status = "Checkedout"
-            elif options == 2:
+            elif options == EMP_OPT_RT_EN_ROUTE:
                 order_status = "En route"
             else:
                 order_status = "Delivered"
             fos.view_sales_today(order_status)
             fos.sum_revenue_today(order_status)
                 
-        elif employee_options == 9:
+        elif employee_options == EMP_OPT_DELETE_ORDER:
             order_id = input("Enter order ID: ")
             fos.delete_order(order_id)
 
@@ -785,15 +819,15 @@ def process_order_flow(fos):
 
     while order != 0:
 
-        if order == 1:
+        if order == CUST_OPT_PROCESS_ORDER:
             cust_id = input("Enter customer ID: ")
             fos.process_order(cust_id)
 
-        elif order == 2:
+        elif order == CUST_OPT_VIEW_ORDER:
             order_id = input("Enter order ID: ")
             fos.view_order(order_id)
                 
-        elif order == 3:
+        elif order == CUST_OPT_CHECKOUT:
             order_id = input("Enter order ID: ")
             order_address = input("Enter delivery address: ")
             checkout = int(input("Press 1 to confirm checkout: "))
@@ -809,14 +843,14 @@ def process_order_flow(fos):
                     bill_amount = t
             fos.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount)
 
-        elif order == 4:
+        elif order == CUST_OPT_CANCEL_ORDER:
             order_id = input("Enter order ID: ")
             cancel = int(input("Press 1 to confirm cancellation: "))
             if cancel == 1:
                 order_status = "Cancelled"
             fos.cancel_order(order_id, order_status) 
 
-        elif order == 5:
+        elif order == CUST_OPT_VIEW_ORDER_STATUS:
             order_id = input("Enter order ID: ")
             fos.view_orders_status(order_id)
 
@@ -840,16 +874,16 @@ def process_customer_options_flow(fos):
 
     while customer_options != 0:
         
-        if customer_options == 1:
+        if customer_options == CUST_OPT_VIEW_MENU:
             fos.view_menu()
 
-        elif customer_options == 2:
+        elif customer_options == CUST_OPT_CUSTOMER_SIGNUP:
             cust_name = input("Enter customer name: ")
             cust_phone = input("Enter customer phone number: ")
             cust_email = input("Enter customer email address: ")
             fos.customer_signup(cust_name, cust_phone, cust_email)
 
-        elif customer_options == 3:
+        elif customer_options == CUST_OPT_CUSTOMER_LOGIN:
             cust_id = input("Enter customer ID: ")
             c = fos.customer_login(cust_id)
             if c:
@@ -882,10 +916,10 @@ def main():
 
     option = int(input(welcome_message))
 
-    if option == 1:
+    if option == EMPLOYEE:
         process_employee_options_flow(fos)
     
-    elif option == 2:
+    elif option == CUSTOMER:
         process_customer_options_flow(fos)
 
 main()
