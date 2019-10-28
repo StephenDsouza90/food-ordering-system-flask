@@ -447,88 +447,102 @@ class Controller(SQLiteBackend):
         self.customer = Customer()
         self.delivery_person = DeliveryPerson()
 
-    def add_food_category(self, category_name, session):
+    def add_food_category(self, category_name):
+        session = self.Session()
         c = self.employee.add_food_category(category_name, session)
         if c:
             print("\nCategory ID: {} \nCategory Name: {} \nsuccessfully!".format(c.category_id, c.name))
         else:
             print("Adding details was not successfully. Please try again!")    
 
-    def add_food_details(self, category_id, food_name, price, session):
+    def add_food_details(self, category_id, food_name, price):
+        session = self.Session()
         f = self.employee.add_food_details(category_id, food_name, price, session)
         if f:
             print("\nFood ID: {} \nCategory ID: {} \nFood Name: {} \nPrice: {} \nSucessfully!".format(f.food_id, f.category_id, f.food_name, f.price ))
         else:
             print("Adding details was not sucessfully. Please try again!")    
 
-    def add_delivery_person(self, delivery_person_name, delivery_person_phone, session):
+    def add_delivery_person(self, delivery_person_name, delivery_person_phone):
+        session = self.Session()
         d = self.employee.add_delivery_person(delivery_person_name, delivery_person_phone, session)
         if d:
             print("\nDeliver person ID: {} \nDeliver person name: {} \nDelivery person phone: {} \nSuccessfully!".format(d.delivery_person_id, d.delivery_person_name, d.delivery_person_phone))
         else:
             print("Adding details was not successfully. Please try again!")    
 
-    def assign_deliver_person_to_deliver_order(self, order_id, delivery_person_id, session):
+    def assign_deliver_person_to_deliver_order(self, order_id, delivery_person_id):
+        session = self.Session()
         d = self.employee.assign_deliver_person_to_deliver_order(order_id, delivery_person_id, session) 
         if d:
             print("Add sucessful!")
         else:
             print("Add not sucessful!") 
 
-    def update_order(self, order_id, order_status, session):
+    def update_order(self, order_id, order_status):
+        session = self.Session()
         s = self.delivery_person.update_order(order_id, order_status, session) 
         if s:
             print("Order update successful!")
         else:
             print("Order update not successful!") 
 
-    def view_orders(self, order_id, session):
+    def view_orders(self, order_id):
+        session = self.Session()
         view_order = self.employee.view_orders(order_id, session)
         if view_order:
             for fc, fd, cos in view_order:
                 print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nPrice per item: {}".format(fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))
                 
-    def view_order_grand_total(self, order_id, session):
+    def view_order_grand_total(self, order_id):
+        session = self.Session()
         view_order_grand = self.employee.view_order_grand_total(order_id, session)
         if view_order_grand:
             for cd, cosa in view_order_grand:                        
                 print("\nCustomer name: {} \nOrder ID: {} \nTotal bill: {}".format(cd.cust_name, cosa.order_id, cosa.bill_amount))                
 
-    def view_order_status(self, order_id, session):
+    def view_order_status(self, order_id):
+        session = self.Session()
         view_status = self.employee.view_order_status(order_id, session)
         if view_status:
             for cd, cosa, dp in view_status:
                 print("\nCustomer name: {} \nOrder ID: {} \nDeliver person name: {} \nOrder status: {} \nTotal bill: {}".format(cd.cust_name, cosa.order_id, dp.delivery_person_name, cosa.order_status, cosa.bill_amount))
 
-    def view_sales_today(self, order_status, session):
+    def view_sales_today(self, order_status):
+        session = self.Session()
         sales_today = self.employee.view_sales_today(order_status, session)
         if sales_today:
             for cos, cd in sales_today:
                 print("\nCustomer name: {} \nOrder ID: {} \nOrder Status: {} \nBill amount: {} \nDate & Time: {}".format(cd.cust_name, cos.order_id, cos.order_status, cos.bill_amount, cos.checkout_time))
 
-    def sum_revenue_today(self, order_status, session):
+    def sum_revenue_today(self, order_status):
+        session = self.Session()
         sum_rev_today = self.employee.sum_revenue_today(order_status, session)
         if sum_rev_today:
             for cos, s in sum_rev_today:
                 print("\nToday's revenue: {} ".format(s))
 
-    def delete_order(self, order_id, session):
+    def delete_order(self, order_id):
+        session = self.Session()
         self.employee.delete_order(order_id, session)
         print("Order {} deleted!".format(order_id))
 
-    def view_menu(self, session):
+    def view_menu(self):
+        session = self.Session()
         menu = self.customer.view_menu(session)
         for fc, fd in menu:
             print("\nFood ID: {} \nFood category: {} \nFood name: {} \nFood price: {}".format(fd.food_id, fc.name, fd.food_name, fd.price))
 
-    def customer_signup(self, cust_name, cust_phone, cust_email, session):
+    def customer_signup(self, cust_name, cust_phone, cust_email):
+        session = self.Session()
         c = self.customer.customer_signup(cust_name, cust_phone, cust_email, session)
         if c:
             print("\nCustomer ID: {} \nCustomer name: {} \nCustomer phone number: {} \nCustomer email address: {} \nSucessfully!".format(c.cust_id, c.cust_name, c.cust_phone, c.cust_email))
         else:
             print("Adding details was not sucessfully. Please try again!")    
 
-    def customer_login(self, cust_id, session):
+    def customer_login(self, cust_id):
+        session = self.Session()
         c = self.customer.customer_login(cust_id, session)
         if c:
             print("Login successful! \nWelcome {} \nCustomer ID {}".format(c.cust_name, c.cust_id))
@@ -536,7 +550,8 @@ class Controller(SQLiteBackend):
             print("Login not sucessfully. Please try again or signup!")
             return
 
-    def process_order(self, cust_id, session):
+    def process_order(self, cust_id):
+        session = self.Session()
         o = self.customer.create_order_id(cust_id, session)
         selection = """ 
 
@@ -555,7 +570,6 @@ class Controller(SQLiteBackend):
             if option == 1:
                 food_id = input("Enter food ID: ")
                 food_qty = input("Enter food quantity: ")
-                session = self.Session()
                 add = self.customer.add_food_to_order(o.order_id, food_id, food_qty, session)
                 if add:
                     print("Add successful!")
@@ -564,7 +578,6 @@ class Controller(SQLiteBackend):
 
             elif option == 2:
                 food_id = input("Enter food ID: ")
-                session = self.Session()
                 remove = self.customer.remove_food_to_order(o.order_id, food_id, session)
                 if remove:
                     print("Items removed")
@@ -574,7 +587,6 @@ class Controller(SQLiteBackend):
             elif option == 3:
                 food_id = input("Enter food ID: ")
                 food_qty = input("Enter food quantity: ")
-                session = self.Session()
                 update = self.customer.update_food_to_order(o.order_id, food_id, food_qty, session)
                 if update:
                     print("Items updated")
@@ -588,7 +600,8 @@ class Controller(SQLiteBackend):
         else:
             print("Order not generated. Please try again!")
 
-    def view_order(self, order_id, session):
+    def view_order(self, order_id):
+        session = self.Session()
         view_order_item = self.customer.view_order_per_item(order_id, session)
         if view_order_item:
             for fc, fd, cos in view_order_item:
@@ -599,21 +612,24 @@ class Controller(SQLiteBackend):
             for fd, cos, cd, cosa, t in view_order_grand:
                 print("\nCustomer name: {} \nOrder ID: {} \nTotal bill: {}".format(cd.cust_name, cosa.order_id, t))
 
-    def checkout(self, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session):
+    def checkout(self, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount):
+        session = self.Session()
         c = self.customer.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session) 
         if c:
             print("Checkout sucessful!")
         else:
             print("Checkout not sucessful!") 
 
-    def cancel_order(self, order_id, order_status, session):
+    def cancel_order(self, order_id, order_status):
+        session = self.Session()
         c = self.customer.cancel_order(order_id, order_status, session) 
         if c:
             print("Cancel sucessful!")
         else:
             print("Cancel not sucessful!") 
         
-    def view_orders_status(self, order_id, session):
+    def view_orders_status(self, order_id):
+        session = self.Session()
         view_order_item = self.customer.view_order_per_item(order_id, session)
         if view_order_item:
             for fc, fd, cos in view_order_item:
@@ -701,27 +717,23 @@ def main():
 
             if employee_options == 1:
                 category_name = input("Enter category name: ")
-                session = fos.Session()
-                fos.add_food_category(category_name, session)
+                fos.add_food_category(category_name)
 
             elif employee_options == 2:
                 category_id = input ("Enter category ID: ")
                 food_name = input("Enter food name: ")
                 price = input("Food price: ")
-                session = fos.Session()
-                fos.add_food_details(category_id, food_name, price, session)
+                fos.add_food_details(category_id, food_name, price)
 
             elif employee_options == 3:
                 delivery_person_name = input("Enter delivery person name: ")
                 delivery_person_phone = input("Enter delivery person phone: ")
-                session = fos.Session()
-                fos.add_delivery_person(delivery_person_name, delivery_person_phone, session)
+                fos.add_delivery_person(delivery_person_name, delivery_person_phone)
 
             elif employee_options == 4:
                 order_id = input("Enter order ID: ")
                 delivery_person_id = input("Enter delivery person ID: ")
-                session = fos.Session()
-                fos.assign_deliver_person_to_deliver_order(order_id, delivery_person_id, session) 
+                fos.assign_deliver_person_to_deliver_order(order_id, delivery_person_id) 
 
             elif employee_options == 5:
                 order_id = input("Enter order ID: ")
@@ -738,31 +750,21 @@ def main():
                 options = int(input(select))
                 if options == 1:
                     order_status = "En route"
-                    session = fos.Session()
-                    fos.update_order(order_id, order_status, session) 
+                    fos.update_order(order_id, order_status) 
 
                 if options == 2:
                     order_status = "Delivered"
-                    session = fos.Session()
-                    fos.update_order(order_id, order_status, session)
+                    fos.update_order(order_id, order_status)
 
             elif employee_options == 6:
                 order_id = input("Enter order ID: ")
-
-                session = fos.Session()
-                fos.view_orders(order_id, session)
-
-                session2 = fos.Session()
-                fos.view_order_grand_total(order_id, session2)
+                fos.view_orders(order_id)
+                fos.view_order_grand_total(order_id)
 
             elif employee_options == 7:
                 order_id = input("Enter order ID: ")
-
-                session = fos.Session()
-                fos.view_order_status(order_id, session)
-
-                session2 = fos.Session()
-                fos.view_orders(order_id, session2)
+                fos.view_order_status(order_id)
+                fos.view_orders(order_id)
 
             elif employee_options == 8:
                 select = """ 
@@ -774,8 +776,7 @@ def main():
                 
                 Your option:                 
 
-                """
-                
+                """                
                 options = int(input(select))
                 if options == 1:
                     order_status = "Checkedout"
@@ -783,17 +784,12 @@ def main():
                     order_status = "En route"
                 else:
                     order_status = "Delivered"
-
-                session = fos.Session()
-                fos.view_sales_today(order_status, session)
-
-                session2 = fos.Session()
-                fos.sum_revenue_today(order_status, session2)
+                fos.view_sales_today(order_status)
+                fos.sum_revenue_today(order_status)
                 
             elif employee_options == 9:
                 order_id = input("Enter order ID: ")
-                session = fos.Session()
-                fos.delete_order(order_id, session)
+                fos.delete_order(order_id)
 
             employee_options = int(input("\nYour option: "))
             
@@ -816,20 +812,17 @@ def main():
         while customer_options != 0:
 
             if customer_options == 1:
-                session = fos.Session()
-                fos.view_menu(session)
+                fos.view_menu()
 
             elif customer_options == 2:
                 cust_name = input("Enter customer name: ")
                 cust_phone = input("Enter customer phone number: ")
                 cust_email = input("Enter customer email address: ")
-                session = fos.Session()
-                fos.customer_signup(cust_name, cust_phone, cust_email, session)
+                fos.customer_signup(cust_name, cust_phone, cust_email)
 
             elif customer_options == 3:
                 cust_id = input("Enter customer ID: ")
-                session = fos.Session()
-                fos.customer_login(cust_id, session)
+                fos.customer_login(cust_id)
 
                 selection = """ 
 
@@ -848,13 +841,11 @@ def main():
                 while order != 0:
 
                     if order == 1:
-                        session = fos.Session()
-                        fos.process_order(cust_id, session)
+                        fos.process_order(cust_id)
 
                     elif order == 2:
                         order_id = input("Enter order ID: ")
-                        session = fos.Session()
-                        fos.view_order(order_id, session)
+                        fos.view_order(order_id)
                     # Problem - A customer can look at any order using the order ID. Need to relook how to solve this.
                 
                     elif order == 3:
@@ -871,7 +862,7 @@ def main():
                         if view_grand_total:
                             for fd, cos, cd, cosa, t in view_grand_total:
                                 bill_amount = t
-                        fos.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session)
+                        fos.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount)
                     # Problem - A customer can look at any order using the order ID. Need to relook how to solve this.
 
                     elif order == 4:
@@ -879,14 +870,12 @@ def main():
                         cancel = int(input("Press 1 to confirm cancellation: "))
                         if cancel == 1:
                             order_status = "Cancelled"
-                        session = fos.Session()
-                        fos.cancel_order(order_id, order_status, session) 
+                        fos.cancel_order(order_id, order_status) 
                     # Problem - A customer can look at any order using the order ID. Need to relook how to solve this.
 
                     elif order == 5:
                         order_id = input("Enter order ID: ")
-                        session = fos.Session()
-                        fos.view_orders_status(order_id, session)
+                        fos.view_orders_status(order_id)
 
                     order = int(input("\nSelect option: "))               
 
