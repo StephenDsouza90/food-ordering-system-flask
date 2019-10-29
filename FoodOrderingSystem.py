@@ -685,7 +685,8 @@ class Controller(SQLiteBackend):
 
     def checkout(self, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount):
         session = self.Session()
-        c = self.customer.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session) 
+        c = self.customer.checkout(order_id, order_status, order_address, 
+                        checkout_time, estimated_time, bill_amount, session) 
         if c:
             print("Checkout {}!".format("successful" if True else "not successful"))
 
@@ -883,7 +884,6 @@ def process_order_flow(fos):
             if view_grand_total:
                 for fd, cos, cd, cosa, grand_total in view_grand_total:
                     bill_amount = grand_total
-                    print(view_grand_total)
             fos.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount)
 
         elif order == CUST_OPT_CANCEL_ORDER:
