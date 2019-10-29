@@ -1,38 +1,50 @@
 import time
 import datetime
 
-EMP_OPT_UO_EN_ROUTE = 1
-EMP_OPT_UO_DELIVERED = 2
+EMPLOYEE = 1
+CUSTOMER = 2
 
-EMP_OPT_RT_CHECKEDOUT = 1
-EMP_OPT_RT_EN_ROUTE = 2
-
+EMP_OPT_QUIT = 0
 EMP_OPT_ADD_FOOD_CATEGORY = 1
 EMP_OPT_ADD_FOOD_DETAILS = 2
 EMP_OPT_ADD_DELIVERY_PERSON = 3
 EMP_OPT_ASSIGN_DELIVERY_PERSON_TO_ORDER = 4 
+
 EMP_OPT_UPDATE_ORDER = 5
+EMP_OPT_UO_EN_ROUTE = 1
+EMP_OPT_UO_DELIVERED = 2
+
 EMP_OPT_VIEW_ORDER_DETAILS = 6
 EMP_OPT_VIEW_ORDER_STATUS = 7
+
 EMP_OPT_VIEW_REVENUE_TODAY = 8
+EMP_OPT_RT_CHECKEDOUT = 1
+EMP_OPT_RT_EN_ROUTE = 2
+
 EMP_OPT_DELETE_ORDER = 9
 
-CUST_OPT_ADD_FOOD_TO_ORDER = 1
-CUST_OPT_REMOVE_FOOD_TO_ORDER = 2
-CUST_OPT_UPDATE_FOOD_TO_ORDER = 3
-
-CUST_OPT_PROCESS_ORDER = 1
-CUST_OPT_VIEW_ORDER = 2
-CUST_OPT_CHECKOUT = 3
-CUST_OPT_CANCEL_ORDER = 4
-CUST_OPT_VIEW_ORDER_STATUS = 5
-
+CUST_OPT_QUIT = 0
 CUST_OPT_VIEW_MENU = 1
 CUST_OPT_CUSTOMER_SIGNUP = 2
 CUST_OPT_CUSTOMER_LOGIN = 3
 
-EMPLOYEE = 1
-CUSTOMER = 2
+CUST_OPT_LOGOUT = 0
+
+CUST_OPT_PROCESS_ORDER = 1
+CUST_OPT_BACK = 0
+CUST_OPT_ADD_FOOD_TO_ORDER = 1
+CUST_OPT_REMOVE_FOOD_TO_ORDER = 2
+CUST_OPT_UPDATE_FOOD_TO_ORDER = 3
+
+CUST_OPT_VIEW_ORDER = 2
+
+CUST_OPT_CHECKOUT = 3
+CUST_OPT_CHECKEDOUT = 1
+
+CUST_OPT_CANCEL_ORDER = 4
+CUST_OPT_CANCELLED = 1
+
+CUST_OPT_VIEW_ORDER_STATUS = 5
 
 from datetime import datetime, timedelta
 
@@ -406,12 +418,12 @@ class Customer:
 
         try:
             view = session.query(
-                        FoodDetails, CustOrderSelection, CustomerDetails, 
-                        CustOrderStatus, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
-                            filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                            filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
-                            filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                            filter(CustOrderSelection.order_id == order_id)            
+                    FoodDetails, CustOrderSelection, CustomerDetails, 
+                    CustOrderStatus, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
+                        filter(CustOrderSelection.food_id == FoodDetails.food_id).\
+                        filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
+                        filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+                        filter(CustOrderSelection.order_id == order_id)            
             return view
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -462,10 +474,10 @@ class Customer:
 
         try:
             view = session.query(CustOrderSelection, CustomerDetails, CustOrderStatus, DeliveryPerson).\
-                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
-                filter(DeliveryPerson.delivery_person_id == CustOrderStatus.delivery_person_id).\
-                filter(CustOrderStatus.order_id == order_id)
+                        filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+                        filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
+                        filter(DeliveryPerson.delivery_person_id == CustOrderStatus.delivery_person_id).\
+                        filter(CustOrderStatus.order_id == order_id)
             return view
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -473,7 +485,8 @@ class Customer:
             session.close()
 
 class Controller(SQLiteBackend):
-    """ Controller class that inherites from SQLite Backend and composition from Emploeyee, Customer and Delivery Person classes """
+    """ Controller class that inherites from SQLite Backend and composition 
+        from Emploeyee, Customer and Delivery Person classes """
 
     def __init__(self, db_url):
         super(Controller, self).__init__(db_url)
@@ -595,7 +608,7 @@ class Controller(SQLiteBackend):
         """
         option = int(input(selection))
 
-        while option != 0:
+        while option != CUST_OPT_BACK:
             
             if option == CUST_OPT_ADD_FOOD_TO_ORDER:
                 food_id = input("Enter food ID: ")
@@ -685,13 +698,10 @@ class DeliveryPerson(Base, Employee):
 
         super(DeliveryPerson, self).__init__()
 
-        update = session.query(
-            CustOrderStatus
-            ).filter(CustOrderStatus.order_id == order_id
-            ).update(
-                {CustOrderStatus.order_status: order_status}, 
-                synchronize_session=False
-                )
+        update = session.query(CustOrderStatus).\
+                    filter(CustOrderStatus.order_id == order_id).\
+                    update({CustOrderStatus.order_status: order_status}, 
+                    synchronize_session=False)
         try:
             session.commit()
             return update
@@ -723,7 +733,7 @@ def process_employee_options_flow(fos):
 
     employee_options = int(input(emp_options))
 
-    while employee_options != 0:
+    while employee_options != EMP_OPT_QUIT:
 
         if employee_options == EMP_OPT_ADD_FOOD_CATEGORY:
             category_name = input("Enter category name: ")
@@ -818,7 +828,7 @@ def process_order_flow(fos):
     """
     order = int(input(selection))
 
-    while order != 0:
+    while order != CUST_OPT_LOGOUT:
 
         if order == CUST_OPT_PROCESS_ORDER:
             cust_id = input("Enter customer ID: ")
@@ -832,7 +842,7 @@ def process_order_flow(fos):
             order_id = input("Enter order ID: ")
             order_address = input("Enter delivery address: ")
             checkout = int(input("Press 1 to confirm checkout: "))
-            if checkout == 1:
+            if checkout == CUST_OPT_CHECKEDOUT:
                 order_status = "Checkedout"
             checkout_time = datetime.now()
             delivery_time = timedelta(minutes=30)
@@ -847,7 +857,7 @@ def process_order_flow(fos):
         elif order == CUST_OPT_CANCEL_ORDER:
             order_id = input("Enter order ID: ")
             cancel = int(input("Press 1 to confirm cancellation: "))
-            if cancel == 1:
+            if cancel == CUST_OPT_CANCELLED:
                 order_status = "Cancelled"
             fos.cancel_order(order_id, order_status) 
 
@@ -873,7 +883,7 @@ def process_customer_options_flow(fos):
         
     customer_options = int(input(cust_options))
 
-    while customer_options != 0:
+    while customer_options != CUST_OPT_QUIT:
         
         if customer_options == CUST_OPT_VIEW_MENU:
             fos.view_menu()
