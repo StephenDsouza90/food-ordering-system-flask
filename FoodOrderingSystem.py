@@ -167,7 +167,8 @@ class Employee:
     def add_delivery_person(self, delivery_person_name, delivery_person_phone, session):
         """ Insert new delivery person """
 
-        details = DeliveryPerson(delivery_person_name=delivery_person_name, delivery_person_phone=delivery_person_phone)
+        details = DeliveryPerson(delivery_person_name=delivery_person_name, 
+                    delivery_person_phone=delivery_person_phone)
         session.add(details)
         try:
             session.commit()
@@ -182,10 +183,10 @@ class Employee:
     def assign_deliver_person_to_deliver_order(self, order_id, delivery_person_id, session):
         """ Update CustOrderStatus table to add deliver person to deliver order """
 
-        update = session.query(CustOrderStatus
-            ).filter(CustOrderStatus.order_id == order_id
-            ).update({CustOrderStatus.delivery_person_id: delivery_person_id
-            }, synchronize_session=False)
+        update = session.query(CustOrderStatus).\
+                    filter(CustOrderStatus.order_id == order_id).\
+                    update({CustOrderStatus.delivery_person_id: delivery_person_id}, 
+                    synchronize_session=False)
         try:
             session.commit()
             return update
@@ -201,9 +202,9 @@ class Employee:
 
         try:
             view = session.query(FoodCategory, FoodDetails, CustOrderSelection).\
-                filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                filter(FoodCategory.category_id == FoodDetails.category_id).\
-                filter(CustOrderSelection.order_id == order_id)
+                        filter(CustOrderSelection.food_id == FoodDetails.food_id).\
+                        filter(FoodCategory.category_id == FoodDetails.category_id).\
+                        filter(CustOrderSelection.order_id == order_id)
             return view
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -215,9 +216,9 @@ class Employee:
 
         try:
             view = session.query(CustomerDetails, CustOrderStatus).\
-                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
-                filter(CustOrderStatus.order_id == order_id)            
+                        filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+                        filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
+                        filter(CustOrderStatus.order_id == order_id)            
             return view
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -229,9 +230,9 @@ class Employee:
 
         try:
             view = session.query(CustomerDetails, CustOrderStatus, DeliveryPerson).\
-                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(DeliveryPerson.delivery_person_id == CustOrderStatus.delivery_person_id).\
-                filter(CustOrderStatus.order_id == order_id)
+                        filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+                        filter(DeliveryPerson.delivery_person_id == CustOrderStatus.delivery_person_id).\
+                        filter(CustOrderStatus.order_id == order_id)
             return view
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -243,10 +244,10 @@ class Employee:
 
         try:
             sales_today = session.query(CustOrderStatus, CustomerDetails).\
-            filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-            filter(CustOrderStatus.order_status == order_status).\
-            filter(CustOrderStatus.checkout_time <= datetime.today()).\
-            group_by(CustOrderStatus.order_id)
+                            filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+                            filter(CustOrderStatus.order_status == order_status).\
+                            filter(CustOrderStatus.checkout_time <= datetime.today()).\
+                            group_by(CustOrderStatus.order_id)
             return sales_today
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -258,8 +259,8 @@ class Employee:
 
         try:
             revenue = session.query(CustOrderStatus, func.sum(CustOrderStatus.bill_amount)).\
-            filter(CustOrderStatus.order_status == order_status).\
-            filter(CustOrderStatus.checkout_time <= datetime.today())
+                        filter(CustOrderStatus.order_status == order_status).\
+                        filter(CustOrderStatus.checkout_time <= datetime.today())
             return revenue
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -288,7 +289,8 @@ class Customer:
         """ Customer can view menu """
 
         try:
-            menu = session.query(FoodCategory, FoodDetails).filter(FoodCategory.category_id == FoodDetails.category_id).all()
+            menu = session.query(FoodCategory, FoodDetails).\
+                        filter(FoodCategory.category_id == FoodDetails.category_id).all()
             return menu
         except Exception as ex:
             print("Error getting menu, error={}".format(str(ex)))
@@ -354,7 +356,9 @@ class Customer:
     def remove_food_to_order(self, order_id, food_id, session):
         """ Remove food items """
 
-        remove = session.query(CustOrderSelection).filter_by(order_id=order_id).filter_by(food_id=food_id).delete()
+        remove = session.query(CustOrderSelection).\
+                    filter_by(order_id=order_id).filter_by(food_id=food_id).\
+                    delete()
         try:
             session.commit()
             return remove
@@ -368,11 +372,11 @@ class Customer:
     def update_food_to_order(self, order_id, food_id, food_qty, session):
         """ Update food items """
 
-        update = session.query(CustOrderSelection
-            ).filter(CustOrderSelection.order_id == order_id
-            ).filter(CustOrderSelection.food_id == food_id
-            ).update({CustOrderSelection.food_qty: food_qty
-            }, synchronize_session=False)
+        update = session.query(CustOrderSelection).\
+                    filter(CustOrderSelection.order_id == order_id).\
+                    filter(CustOrderSelection.food_id == food_id).\
+                    update({CustOrderSelection.food_qty: food_qty}, 
+                    synchronize_session=False)
         try:
             session.commit()
             return update
@@ -388,9 +392,9 @@ class Customer:
 
         try:
             view = session.query(FoodCategory, FoodDetails, CustOrderSelection).\
-                filter(FoodCategory.category_id == FoodDetails.category_id).\
-                filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                filter(CustOrderSelection.order_id == order_id)            
+                        filter(FoodCategory.category_id == FoodDetails.category_id).\
+                        filter(CustOrderSelection.food_id == FoodDetails.food_id).\
+                        filter(CustOrderSelection.order_id == order_id)            
             return view
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -401,11 +405,13 @@ class Customer:
         """ Customer can view their orders with grand total before checkout/confirming order """
 
         try:
-            view = session.query(FoodDetails, CustOrderSelection, CustomerDetails, CustOrderStatus, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
-                filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
-                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(CustOrderSelection.order_id == order_id)            
+            view = session.query(
+                        FoodDetails, CustOrderSelection, CustomerDetails, 
+                        CustOrderStatus, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
+                            filter(CustOrderSelection.food_id == FoodDetails.food_id).\
+                            filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
+                            filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+                            filter(CustOrderSelection.order_id == order_id)            
             return view
         except Exception as ex:
             print("Error getting order, error={}".format(str(ex)))
@@ -415,17 +421,15 @@ class Customer:
     def checkout(self, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount, session):
         """ Customer can checkout/confirm order """
 
-        checkout_update = session.query(
-            CustOrderStatus
-            ).filter(CustOrderStatus.order_id == order_id
-            ).update(
-                {CustOrderStatus.order_status: order_status, 
-                CustOrderStatus.order_address: order_address, 
-                CustOrderStatus.checkout_time: checkout_time,
-                CustOrderStatus.estimated_time: estimated_time,
-                CustOrderStatus.bill_amount: bill_amount}, 
-                synchronize_session=False
-                )
+        checkout_update = session.query(CustOrderStatus).\
+                            filter(CustOrderStatus.order_id == order_id).\
+                            update({
+                            CustOrderStatus.order_status: order_status, 
+                            CustOrderStatus.order_address: order_address, 
+                            CustOrderStatus.checkout_time: checkout_time,
+                            CustOrderStatus.estimated_time: estimated_time,
+                            CustOrderStatus.bill_amount: bill_amount}, 
+                            synchronize_session=False)
         try:
             session.commit()
             return checkout_update
@@ -439,13 +443,10 @@ class Customer:
     def cancel_order(self, order_id, order_status, session):
         """ Cancel order """
 
-        update = session.query(
-            CustOrderStatus
-            ).filter(CustOrderStatus.order_id == order_id
-            ).update(
-                {CustOrderStatus.order_status: order_status}, 
-                synchronize_session=False
-                )
+        update = session.query(CustOrderStatus).\
+                    filter(CustOrderStatus.order_id == order_id).\
+                    update({CustOrderStatus.order_status: order_status}, 
+                    synchronize_session=False)
         try:
             session.commit()
             return update
