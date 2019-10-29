@@ -869,8 +869,7 @@ def process_order_flow(fos):
 
 def process_customer_options_flow(fos):
     cust_options = """ 
-        
-    Welcome to the employee interface! Please press the below options:
+    Welcome to the customer interface! Please press the below options:
         
     0. Quit
     1. View menu
@@ -898,16 +897,16 @@ def process_customer_options_flow(fos):
             cust_id = input("Enter customer ID: ")
             c = fos.customer_login(cust_id)
             if c:
-                print("Login successful! \nWelcome {} \nCustomer ID {}".format(c.cust_name, c.cust_id))
+                print("Login successful! \nWelcome {}".format(c.cust_name))
+                process_order_flow(fos)
             else:
-                print("Login not sucessfully. Please try again or signup!")
-                break
-            process_order_flow(fos)
-
+                print("Login not successfully. Please try again or signup!")
+                            
         customer_options = int(input(cust_options))
 
 def main():
-    """ The user interface in which employee/customer will use to perform actions on the Food Ordering System. """
+    """ The user interface in which employee/customer will use to 
+    perform actions on the Food Ordering System. """
 
     db_url = "sqlite:///fos.db"
     print("Connecting to {}".format(db_url))
