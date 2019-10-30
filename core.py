@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 import constants
