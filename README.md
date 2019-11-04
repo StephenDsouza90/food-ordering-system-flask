@@ -1,6 +1,6 @@
 # Food Ordering System
 
-This is a simple command line food ordering system that has two interfaces i.e. Employee and Customer.
+This is a simple command line food ordering system which has two interfaces i.e. Employee and Customer.
 
 Both users have different sets of functions such as:
 
@@ -35,12 +35,13 @@ The controller class also includes all the methods from the Employee and Custome
 
 The purpose of the controller class is to mainly connect to the SQLiteBackend class and use the session as well as link the Employee and Customer classes to perform the functions.
 
-### How to run locally:
+## How to run locally:
 
 >> python main.py
 
-Connecting to sqlite:///fos2.db
 
+    Connecting to sqlite:///fos2.db
+    
     Welcome to the Food Ordering System! Please press the below options:
 
     1. Employee
@@ -66,6 +67,7 @@ Connecting to sqlite:///fos2.db
     Your Option:
 
     1
-Enter category name: Desserts
-
-Add Successfully
+    
+    Enter category name: Desserts
+    
+    Add Successfully
