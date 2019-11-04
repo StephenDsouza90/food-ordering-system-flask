@@ -37,10 +37,10 @@ The purpose of the controller class is to mainly connect to the SQLiteBackend cl
 
 ## How to run locally:
 
+```
 >> python main.py
 
-
-    Connecting to sqlite:///fos2.db
+Connecting to sqlite:///fos2.db
     
     Welcome to the Food Ordering System! Please press the below options:
 
@@ -71,3 +71,4 @@ The purpose of the controller class is to mainly connect to the SQLiteBackend cl
     Enter category name: Desserts
     
     Add Successfully
+```
