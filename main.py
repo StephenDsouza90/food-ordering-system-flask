@@ -1,4 +1,3 @@
-import time
 from datetime import datetime, timedelta
 
 import constants
@@ -141,7 +140,7 @@ def process_order_flow(fos):
             delivery_time = timedelta(minutes=30)
             estimated_time = checkout_time + delivery_time
             session = fos.Session()
-            view_grand_total = fos.customer.view_order_grand_total(order_id, session)
+            view_grand_total = fos.customer.view_order_grand_total(session, order_id)
             if view_grand_total:
                 for fd, cos, cd, cosa, grand_total in view_grand_total:
                     bill_amount = grand_total
