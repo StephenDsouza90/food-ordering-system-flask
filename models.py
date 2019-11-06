@@ -184,7 +184,7 @@ class Employee:
         return view
         
     def view_revenue_today(self, session, order_status):
-        """ View sales of today """
+        """ View revenue/sales of today """
 
         sales_today = text("""SELECT cd.cust_name, cos.order_id, cos.order_status, cos.bill_amount, cos.checkout_time 
             FROM customer_order_status as cos 
@@ -195,7 +195,7 @@ class Employee:
         return result
             
     def sum_revenue_today(self, session, order_status):
-        """ Sum revenue of today """
+        """ Sum revenue/sales of today """
 
         rev = text("""SELECT sum(cos.bill_amount) 
             FROM customer_order_status as cos 

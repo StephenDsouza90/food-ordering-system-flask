@@ -16,7 +16,7 @@ def process_employee_options_flow(fos):
     5. Update order (Only for delivery person use)
     6. View order details
     7. View order status
-    8. View revenue today
+    8. View revenue/sales today
     9. Delete order
     
     Your Option:

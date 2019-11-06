@@ -5,8 +5,8 @@ from models import Employee, Customer, DeliveryPerson, SQLiteBackend, handle_ses
 
 
 class Controller(SQLiteBackend):
-    """ Controller class that inherites from SQLite Backend and composition 
-        from Emploeyee, Customer and Delivery Person classes """
+    """ Controller class that inherites from SQLite Backend and 
+        composition from Emploeyee, Customer and Delivery Person classes """
 
     def __init__(self, db_url):
         super(Controller, self).__init__(db_url)
