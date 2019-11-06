@@ -70,13 +70,13 @@ def process_employee_options_flow(fos):
 
         elif employee_options == constants.EMP_OPT_VIEW_ORDER_DETAILS:
             order_id = input("Enter order ID: ")
-            fos.view_orders(order_id)
+            fos.view_order_emp(order_id)
             fos.view_order_grand_total(order_id)
 
         elif employee_options == constants.EMP_OPT_VIEW_ORDER_STATUS:
             order_id = input("Enter order ID: ")
             fos.view_order_status(order_id)
-            fos.view_orders(order_id)
+            fos.view_order_emp(order_id)
 
         elif employee_options == constants.EMP_OPT_VIEW_REVENUE_TODAY:
             select = """ 
@@ -87,16 +87,15 @@ def process_employee_options_flow(fos):
             3. Delivered
                 
             Your option:                 
-
             """                
             options = int(input(select))
             if options == constants.EMP_OPT_RT_CHECKEDOUT:
-                order_status = "Checkedout"
+                order_status = "'Checkedout'"
             elif options == constants.EMP_OPT_RT_EN_ROUTE:
-                order_status = "En route"
+                order_status = "'En route'"
             else:
-                order_status = "Delivered"
-            fos.view_sales_today(order_status)
+                order_status = "'Delivered'"
+            fos.view_revenue_today(order_status)
             fos.sum_revenue_today(order_status)
                 
         elif employee_options == constants.EMP_OPT_DELETE_ORDER:

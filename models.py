@@ -1,8 +1,9 @@
 import time
-from datetime import datetime
+from datetime import datetime, date
 
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean
 from sqlalchemy import create_engine, func
+from sqlalchemy.sql import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -156,7 +157,7 @@ class Employee:
         session.commit()
         return update
 
-    def view_orders(self, session, order_id):
+    def view_order(self, session, order_id):
         """ View particular details of an order """
 
         view = session.query(FoodCategory, FoodDetails, CustOrderSelection).\
@@ -170,7 +171,6 @@ class Employee:
 
         view = session.query(CustomerDetails, CustOrderStatus).\
                 filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
                 filter(CustOrderStatus.order_id == order_id)            
         return view
 
@@ -183,23 +183,25 @@ class Employee:
                 filter(CustOrderStatus.order_id == order_id)
         return view
         
-    def view_sales_today(self, session, order_status):
+    def view_revenue_today(self, session, order_status):
         """ View sales of today """
 
-        sales_today = session.query(CustOrderStatus, CustomerDetails).\
-                        filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                        filter(CustOrderStatus.order_status == order_status).\
-                        filter(CustOrderStatus.checkout_time <= datetime.today()).\
-                        group_by(CustOrderStatus.order_id)
-        return sales_today
-        
+        sales_today = text("""SELECT cd.cust_name, cos.order_id, cos.order_status, cos.bill_amount, cos.checkout_time 
+            FROM customer_order_status as cos 
+            JOIN customer_details as cd 
+                ON cd.cust_id = cos.cust_id 
+            WHERE cos.order_status = {} AND date(cos.checkout_time) = date(CURRENT_DATE);""".format(order_status))
+        result = session.connection().execute(sales_today).fetchall()
+        return result
+            
     def sum_revenue_today(self, session, order_status):
         """ Sum revenue of today """
 
-        revenue = session.query(CustOrderStatus, func.sum(CustOrderStatus.bill_amount)).\
-                    filter(CustOrderStatus.order_status == order_status).\
-                    filter(CustOrderStatus.checkout_time <= datetime.today())
-        return revenue
+        rev = text("""SELECT sum(cos.bill_amount) 
+            FROM customer_order_status as cos 
+            WHERE cos.order_status = {} AND date(cos.checkout_time) = date(CURRENT_DATE);""".format(order_status))
+        result = session.connection().execute(rev).fetchall()
+        return result
 
     def delete_order(self, session, order_id):
         """ Delete order """

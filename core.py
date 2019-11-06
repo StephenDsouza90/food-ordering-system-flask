@@ -41,8 +41,8 @@ class Controller(SQLiteBackend):
         print("Order update {}".format("successful" if u else "not successful"))
 
     @handle_session
-    def view_orders(self, session, order_id):
-        view_order = self.employee.view_orders(session, order_id)
+    def view_order_emp(self, session, order_id):
+        view_order = self.employee.view_order(session, order_id)
         if view_order:
             for fc, fd, cos in view_order:
                 print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nPrice per item: {}".format(
@@ -65,18 +65,18 @@ class Controller(SQLiteBackend):
                     cd.cust_name, cosa.order_id, dp.delivery_person_name, cosa.order_status, cosa.bill_amount))
 
     @handle_session
-    def view_sales_today(self, session, order_status):
-        sales_today = self.employee.view_sales_today(session, order_status)
-        if sales_today:
-            for cos, cd in sales_today:
+    def view_revenue_today(self, session, order_status):
+        rev_today = self.employee.view_revenue_today(session, order_status)
+        if rev_today:
+            for ex in rev_today:
                 print("\nCustomer name: {} \nOrder ID: {} \nOrder Status: {} \nBill amount: {} \nDate & Time: {}".format(
-                    cd.cust_name, cos.order_id, cos.order_status, cos.bill_amount, cos.checkout_time))
+                    ex.cust_name, ex.order_id, ex.order_status, ex.bill_amount, ex.checkout_time))
 
     @handle_session
     def sum_revenue_today(self, session, order_status):
         sum_rev_today = self.employee.sum_revenue_today(session, order_status)
         if sum_rev_today:
-            for cos, s in sum_rev_today:
+            for s in sum_rev_today:
                 print("\nToday's revenue: {} ".format(s))
 
     @handle_session
