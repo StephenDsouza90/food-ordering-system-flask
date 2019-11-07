@@ -295,34 +295,33 @@ class DeliveryPerson(Base, Employee):
         return update
 
 
-class CommonFunctions:
-    """ Functions which both employee and customer can use """
+def view_order(session, order_id):
+    """ Employee/Customer can view details of a particular order """
 
-    def view_order(self, session, order_id):
-        """ Employee/Customer can view details of a particular order """
+    view = session.query(FoodCategory, FoodDetails, CustOrderSelection).\
+            filter(CustOrderSelection.food_id == FoodDetails.food_id).\
+            filter(FoodCategory.category_id == FoodDetails.category_id).\
+            filter(CustOrderSelection.order_id == order_id)
+    return view
 
-        view = session.query(FoodCategory, FoodDetails, CustOrderSelection).\
+
+def view_order_grand_total(session, order_id):
+    """ Employee/Customer can view the grand total of an order """
+
+    view = session.query(
+            CustomerDetails, CustOrderStatus, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
                 filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                filter(FoodCategory.category_id == FoodDetails.category_id).\
-                filter(CustOrderSelection.order_id == order_id)
-        return view
-
-    def view_order_grand_total(self, session, order_id):
-        """ Employee/Customer can view the grand total of an order """
-
-        view = session.query(
-                CustomerDetails, CustOrderStatus, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
-                    filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                    filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
-                    filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                    filter(CustOrderSelection.order_id == order_id)            
-        return view
-
-    def view_order_status(self, session, order_id):
-        """ Employee/Customer can view status of the order """
-
-        view = session.query(CustomerDetails, CustOrderStatus, DeliveryPerson).\
+                filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
                 filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(DeliveryPerson.delivery_person_id == CustOrderStatus.delivery_person_id).\
-                filter(CustOrderStatus.order_id == order_id)
-        return view
+                filter(CustOrderSelection.order_id == order_id)            
+    return view
+
+
+def view_order_status(session, order_id):
+    """ Employee/Customer can view status of the order """
+
+    view = session.query(CustomerDetails, CustOrderStatus, DeliveryPerson).\
+            filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+            filter(DeliveryPerson.delivery_person_id == CustOrderStatus.delivery_person_id).\
+            filter(CustOrderStatus.order_id == order_id)
+    return view

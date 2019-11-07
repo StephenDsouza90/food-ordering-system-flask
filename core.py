@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import constants
-from models import Employee, Customer, DeliveryPerson, SQLiteBackend, CommonFunctions, handle_session
+from models import Employee, Customer, DeliveryPerson, SQLiteBackend, handle_session, view_order_status, view_order_grand_total, view_order
 
 
 class Controller(SQLiteBackend):
@@ -13,7 +13,6 @@ class Controller(SQLiteBackend):
         self.employee = Employee()
         self.customer = Customer()
         self.delivery_person = DeliveryPerson()
-        self.common_func = CommonFunctions()
 
     @handle_session
     def add_food_category(self, session, category_name):
@@ -40,22 +39,6 @@ class Controller(SQLiteBackend):
     def update_order(self, session, order_id, order_status):
         u = self.delivery_person.update_order(session, order_id, order_status) 
         print("Order update {}".format("successful" if u else "not successful"))
-
-    @handle_session
-    def view_order(self, session, order_id):
-        view_order_item = self.common_func.view_order(session, order_id)
-        if view_order_item:
-            for fc, fd, cos in view_order_item:
-                print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nTotal per item: {}".format(
-                    fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))
-
-    @handle_session
-    def view_order_grand_total(self, session, order_id):
-        view_grand_total = self.common_func.view_order_grand_total(session, order_id)
-        if view_grand_total:
-            for cd, cost, grand_total in view_grand_total:                        
-                print("\nCustomer name: {} \nOrder ID: {} \nTotal bill: {}".format(
-                    cd.cust_name, cost.order_id, grand_total))                
 
     @handle_session
     def view_sales_today(self, session, order_status):
@@ -143,8 +126,24 @@ class Controller(SQLiteBackend):
         print("Cancel {}!".format("successful" if c else "not successful"))
         
     @handle_session
+    def view_order(self, session, order_id):
+        view_order_item = view_order(session, order_id)
+        if view_order_item:
+            for fc, fd, cos in view_order_item:
+                print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nTotal per item: {}".format(
+                    fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))
+
+    @handle_session
+    def view_order_grand_total(self, session, order_id):
+        view_grand_total = view_order_grand_total(session, order_id)
+        if view_grand_total:
+            for cd, cost, grand_total in view_grand_total:                        
+                print("\nCustomer name: {} \nOrder ID: {} \nTotal bill: {}".format(
+                    cd.cust_name, cost.order_id, grand_total))                
+
+    @handle_session
     def view_order_status(self, session, order_id):
-        view_status = self.common_func.view_order_status(session, order_id)
+        view_status = view_order_status(session, order_id)
         if view_status:
             for cd, cosa, dp in view_status:
                 print("\nCustomer name: {} \nOrder ID: {} \nDeliver person name: {} \nOrder status: {} \nTotal bill: {}".format(
