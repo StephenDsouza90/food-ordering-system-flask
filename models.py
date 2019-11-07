@@ -156,34 +156,8 @@ class Employee:
                     synchronize_session=False)
         session.commit()
         return update
-
-    def view_order(self, session, order_id):
-        """ View particular details of an order """
-
-        view = session.query(FoodCategory, FoodDetails, CustOrderSelection).\
-                filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                filter(FoodCategory.category_id == FoodDetails.category_id).\
-                filter(CustOrderSelection.order_id == order_id)
-        return view
-
-    def view_order_grand_total(self, session, order_id):
-        """ Employee can view orders with grand total """
-
-        view = session.query(CustomerDetails, CustOrderStatus).\
-                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(CustOrderStatus.order_id == order_id)            
-        return view
-
-    def view_order_status(self, session, order_id):
-        """ View status of a particular order """
-
-        view = session.query(CustomerDetails, CustOrderStatus, DeliveryPerson).\
-                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(DeliveryPerson.delivery_person_id == CustOrderStatus.delivery_person_id).\
-                filter(CustOrderStatus.order_id == order_id)
-        return view
         
-    def view_revenue_today(self, session, order_status):
+    def view_sales_today(self, session, order_status):
         """ View revenue/sales of today """
 
         sales_today = text("""SELECT cd.cust_name, cos.order_id, cos.order_status, cos.bill_amount, cos.checkout_time 
@@ -271,28 +245,7 @@ class Customer:
                     synchronize_session=False)
         session.commit()
         return update
-    
-    def view_order_per_item(self, session, order_id):
-        """ Customer can view their orders with price per item before checkout/confirming order """
-
-        view = session.query(FoodCategory, FoodDetails, CustOrderSelection).\
-                filter(FoodCategory.category_id == FoodDetails.category_id).\
-                filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                filter(CustOrderSelection.order_id == order_id)            
-        return view
-        
-    def view_order_grand_total(self, session, order_id):
-        """ Customer can view their orders with grand total before checkout/confirming order """
-
-        view = session.query(
-                FoodDetails, CustOrderSelection, CustomerDetails, 
-                CustOrderStatus, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
-                    filter(CustOrderSelection.food_id == FoodDetails.food_id).\
-                    filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
-                    filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                    filter(CustOrderSelection.order_id == order_id)            
-        return view
-        
+                    
     def checkout(self, session, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount):
         """ Customer can checkout/confirm order """
 
@@ -318,16 +271,6 @@ class Customer:
         session.commit()
         return update
     
-    def view_orders_status(self, session, order_id):
-        """ Customer can view their orders and status after checkout/confirming order """
-
-        view = session.query(CustOrderSelection, CustomerDetails, CustOrderStatus, DeliveryPerson).\
-                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
-                filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
-                filter(DeliveryPerson.delivery_person_id == CustOrderStatus.delivery_person_id).\
-                filter(CustOrderStatus.order_id == order_id)
-        return view
-        
 
 class DeliveryPerson(Base, Employee):
     """ Represents delivery person """
@@ -350,3 +293,36 @@ class DeliveryPerson(Base, Employee):
                     synchronize_session=False)
         session.commit()
         return update
+
+
+class CommonFunctions:
+    """ Functions which both employee and customer can use """
+
+    def view_order(self, session, order_id):
+        """ Employee/Customer can view details of a particular order """
+
+        view = session.query(FoodCategory, FoodDetails, CustOrderSelection).\
+                filter(CustOrderSelection.food_id == FoodDetails.food_id).\
+                filter(FoodCategory.category_id == FoodDetails.category_id).\
+                filter(CustOrderSelection.order_id == order_id)
+        return view
+
+    def view_order_grand_total(self, session, order_id):
+        """ Employee/Customer can view the grand total of an order """
+
+        view = session.query(
+                CustomerDetails, CustOrderStatus, func.sum(CustOrderSelection.food_qty*FoodDetails.price)).\
+                    filter(CustOrderSelection.food_id == FoodDetails.food_id).\
+                    filter(CustOrderSelection.order_id == CustOrderStatus.order_id).\
+                    filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+                    filter(CustOrderSelection.order_id == order_id)            
+        return view
+
+    def view_order_status(self, session, order_id):
+        """ Employee/Customer can view status of the order """
+
+        view = session.query(CustomerDetails, CustOrderStatus, DeliveryPerson).\
+                filter(CustomerDetails.cust_id == CustOrderStatus.cust_id).\
+                filter(DeliveryPerson.delivery_person_id == CustOrderStatus.delivery_person_id).\
+                filter(CustOrderStatus.order_id == order_id)
+        return view
