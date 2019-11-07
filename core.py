@@ -1,15 +1,12 @@
 from datetime import datetime
 
-from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError
-
 import constants
-from models import Employee, Customer, DeliveryPerson, SQLiteBackend
+from models import Employee, Customer, DeliveryPerson, SQLiteBackend, handle_session, view_order_status, view_order_grand_total, view_order
 
 
 class Controller(SQLiteBackend):
-    """ Controller class that inherites from SQLite Backend and composition 
-        from Emploeyee, Customer and Delivery Person classes """
+    """ Controller class that inherites from SQLite Backend and 
+        composition from Emploeyee, Customer and Delivery Person classes """
 
     def __init__(self, db_url):
         super(Controller, self).__init__(db_url)
@@ -17,113 +14,76 @@ class Controller(SQLiteBackend):
         self.customer = Customer()
         self.delivery_person = DeliveryPerson()
 
+    @handle_session
+    def add_food_category(self, session, category_name):
+        c = self.employee.add_food_category(session, category_name)
+        print("\nAdd {}".format("Successfully" if c else "not successfully"))
 
-    def add_food_category(self, category_name):
-        session = self.Session()
-        self.employee.add_food_category(category_name, session)
-        print("\nAdd {}".format("Successfully" if True else "not successfully"))
+    @handle_session
+    def add_food_details(self, session, category_id, food_name, price):
+        d = self.employee.add_food_details(session, category_id, food_name, price)
+        print("\nAdd {}".format("Successfully" if d else "not successfully"))
 
+    @handle_session
+    def add_delivery_person(self, session, delivery_person_name, delivery_person_phone):
+        d = self.employee.add_delivery_person(session, delivery_person_name, delivery_person_phone)
+        print("\nAdd {} \nDeliver person ID: {} ".format(
+                "Successfully", d.delivery_person_id if d else  "not successfully"))
 
-    def add_food_details(self, category_id, food_name, price):
-        session = self.Session()
-        self.employee.add_food_details(category_id, food_name, price, session)
-        print("\nAdd {}".format("Successfully" if True else "not successfully"))
+    @handle_session
+    def assign_deliver_person_to_deliver_order(self, session, order_id, delivery_person_id):
+        a = self.employee.assign_deliver_person_to_deliver_order(session, order_id, delivery_person_id) 
+        print("\nAdd {}".format("sucessful" if a else "not sucessful")) 
 
+    @handle_session
+    def update_order(self, session, order_id, order_status):
+        u = self.delivery_person.update_order(session, order_id, order_status) 
+        print("Order update {}".format("successful" if u else "not successful"))
 
-    def add_delivery_person(self, delivery_person_name, delivery_person_phone):
-        session = self.Session()
-        d = self.employee.add_delivery_person(delivery_person_name, delivery_person_phone, session)
-        if d:
-            print("\nAdd {} \nDeliver person ID: {} ".format(
-                "Successfully", d.delivery_person_id if True else  "not successfully"))
-
-
-    def assign_deliver_person_to_deliver_order(self, order_id, delivery_person_id):
-        session = self.Session()
-        self.employee.assign_deliver_person_to_deliver_order(order_id, delivery_person_id, session) 
-        print("Add {}".format("sucessful" if True else "not sucessful")) 
-
-
-    def update_order(self, order_id, order_status):
-        session = self.Session()
-        self.delivery_person.update_order(order_id, order_status, session) 
-        print("Order update {}".format("successful" if True else "not successful"))
-
-
-    def view_orders(self, order_id):
-        session = self.Session()
-        view_order = self.employee.view_orders(order_id, session)
-        if view_order:
-            for fc, fd, cos in view_order:
-                print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nPrice per item: {}".format(
-                    fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))
-                
-
-    def view_order_grand_total(self, order_id):
-        session = self.Session()
-        view_order_grand = self.employee.view_order_grand_total(order_id, session)
-        if view_order_grand:
-            for cd, cosa in view_order_grand:                        
-                print("\nCustomer name: {} \nOrder ID: {} \nTotal bill: {}".format(
-                    cd.cust_name, cosa.order_id, cosa.bill_amount))                
-
-
-    def view_order_status(self, order_id):
-        session = self.Session()
-        view_status = self.employee.view_order_status(order_id, session)
-        if view_status:
-            for cd, cosa, dp in view_status:
-                print("\nCustomer name: {} \nOrder ID: {} \nDeliver person name: {} \nOrder status: {} \nTotal bill: {}".format(
-                    cd.cust_name, cosa.order_id, dp.delivery_person_name, cosa.order_status, cosa.bill_amount))
-
-
-    def view_sales_today(self, order_status):
-        session = self.Session()
-        sales_today = self.employee.view_sales_today(order_status, session)
+    @handle_session
+    def view_sales_today(self, session, order_status):
+        sales_today = self.employee.view_sales_today(session, order_status)
         if sales_today:
-            for cos, cd in sales_today:
+            for i in sales_today:
                 print("\nCustomer name: {} \nOrder ID: {} \nOrder Status: {} \nBill amount: {} \nDate & Time: {}".format(
-                    cd.cust_name, cos.order_id, cos.order_status, cos.bill_amount, cos.checkout_time))
+                    i.cust_name, i.order_id, i.order_status, i.bill_amount, i.checkout_time))
 
-
-    def sum_revenue_today(self, order_status):
-        session = self.Session()
-        sum_rev_today = self.employee.sum_revenue_today(order_status, session)
+    @handle_session
+    def sum_revenue_today(self, session, order_status):
+        sum_rev_today = self.employee.sum_revenue_today(session, order_status)
         if sum_rev_today:
-            for cos, s in sum_rev_today:
-                print("\nToday's revenue: {} ".format(s))
+            for sum in sum_rev_today:
+                print("\nToday's revenue: {}".format(sum))
 
+    @handle_session
+    def delete_order(self, session, order_id):
+        d = self.employee.delete_order(session, order_id)
+        print("\nOrder delete {}".format("successful" if d else "unsuccessful"))
 
-    def delete_order(self, order_id):
-        session = self.Session()
-        self.employee.delete_order(order_id, session)
-        print("\nOrder {} deleted!".format(order_id))
-
-
-    def view_menu(self):
-        session = self.Session()
+    @handle_session
+    def view_menu(self, session):
         menu = self.customer.view_menu(session)
         for fc, fd in menu:
             print("\nFood ID: {} \nFood category: {} \nFood name: {} \nFood price: {}".format(
                 fd.food_id, fc.name, fd.food_name, fd.price))
 
+    @handle_session
+    def customer_signup(self, session, cust_name, cust_phone, cust_email):
+        c = self.customer.customer_signup(session, cust_name, cust_phone, cust_email)
+        print("\nSignup {}! Customer ID: {}".format("successfully", c.cust_id if c else "not successfully"))
 
-    def customer_signup(self, cust_name, cust_phone, cust_email):
-        session = self.Session()
-        c = self.customer.customer_signup(cust_name, cust_phone, cust_email, session)
-        if c:
-            print("\nSignup {}! Customer ID: {}".format("successfully", c.cust_id if True else "not successfully"))
-
-
-    def customer_login(self, cust_id):
-        session = self.Session()
-        login = self.customer.customer_login(cust_id, session)
+    @handle_session
+    def customer_login(self, session, cust_id):
+        login = self.customer.customer_login(session, cust_id)
         return login
 
+    @handle_session
+    def process_order(self, session, cust_id):
+        o = self.customer.create_order_id(session, cust_id)
+        if not o:
+            print("Order not generated")
+            return
 
-    def process_order(self, cust_id):
-        session = self.Session()
-        o = self.customer.create_order_id(cust_id, session)
         selection = """        
         0. Back
         1. Add food to order
@@ -131,7 +91,6 @@ class Controller(SQLiteBackend):
         3. Update food to order
                 
         Select option: 
-
         """
         option = int(input(selection))
 
@@ -140,66 +99,55 @@ class Controller(SQLiteBackend):
             if option == constants.CUST_OPT_ADD_FOOD_TO_ORDER:
                 food_id = input("Enter food ID: ")
                 food_qty = input("Enter food quantity: ")
-                self.customer.add_food_to_order(o.order_id, food_id, food_qty, session)
-                print("Add {}!".format("successful" if True else "not successful."))
+                a = self.customer.add_food_to_order(session, o.order_id, food_id, food_qty)
+                print("Add {}!".format("successful" if a else "not successful."))
 
             elif option == constants.CUST_OPT_REMOVE_FOOD_TO_ORDER:
                 food_id = input("Enter food ID: ")
-                self.customer.remove_food_to_order(o.order_id, food_id, session)
-                print("Items {}".format("removed" if True else "not removed"))
+                r = self.customer.remove_food_to_order(session, o.order_id, food_id)
+                print("Items {}".format("removed" if r else "not removed"))
 
             elif option == constants.CUST_OPT_UPDATE_FOOD_TO_ORDER:
                 food_id = input("Enter food ID: ")
                 food_qty = input("Enter food quantity: ")
-                self.customer.update_food_to_order(o.order_id, food_id, food_qty, session)
-                print("Items {}".format("updated" if True else "not updated"))
+                u = self.customer.update_food_to_order(session, o.order_id, food_id, food_qty)
+                print("Items {}".format("updated" if u else "not updated"))
 
             option = int(input(selection))
         
-        if o:
-            print("Order {}. \nOrder number: {}".format("generated", o.order_id if True else "not generated"))
+        print("\nOrder generated \nOrder number: {}".format(o.order_id))
 
+    @handle_session
+    def checkout(self, session, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount):
+        c = self.customer.checkout(session, order_id, order_status, order_address, 
+                    checkout_time, estimated_time, bill_amount) 
+        print("Checkout {}!".format("successful" if c else "not successful"))
 
-    def view_order(self, order_id):
-        session = self.Session()
-        view_order_item = self.customer.view_order_per_item(order_id, session)
-        if view_order_item:
-            for fc, fd, cos in view_order_item:
-                print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nTotal per item: {}".format(
-                    fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))
-
-        view_order_grand = self.customer.view_order_grand_total(order_id, session)
-        if view_order_grand:
-            for fd, cos, cd, cosa, t in view_order_grand:
-                print("\nCustomer name: {} \nOrder ID: {} \nTotal bill: {}".format(cd.cust_name, cosa.order_id, t))
-
-
-    def checkout(self, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount):
-        session = self.Session()
-        c = self.customer.checkout(order_id, order_status, order_address, 
-                        checkout_time, estimated_time, bill_amount, session) 
-        if c:
-            print("Checkout {}!".format("successful" if True else "not successful"))
-
-
-    def cancel_order(self, order_id, order_status):
-        session = self.Session()
-        c = self.customer.cancel_order(order_id, order_status, session) 
-        if c:
-            print("Cancel {}!".format("successful" if True else "not successful"))
+    @handle_session
+    def cancel_order(self, session, order_id, order_status):
+        c = self.customer.cancel_order(session, order_id, order_status) 
+        print("Cancel {}!".format("successful" if c else "not successful"))
         
-
-    def view_orders_status(self, order_id):
-        session = self.Session()
-        view_order_item = self.customer.view_order_per_item(order_id, session)
+    @handle_session
+    def view_order(self, session, order_id):
+        view_order_item = view_order(session, order_id)
         if view_order_item:
             for fc, fd, cos in view_order_item:
                 print("\nFood category: {} \nFood name: {} \nFood price: {} \nFood quantity: {} \nTotal per item: {}".format(
                     fc.name, fd.food_name, fd.price, cos.food_qty, (fd.price*cos.food_qty)))
-                        
-        view_status = self.customer.view_orders_status(order_id, session)
+
+    @handle_session
+    def view_order_grand_total(self, session, order_id):
+        view_grand_total = view_order_grand_total(session, order_id)
+        if view_grand_total:
+            for cd, cost, grand_total in view_grand_total:                        
+                print("\nCustomer name: {} \nOrder ID: {} \nTotal bill: {}".format(
+                    cd.cust_name, cost.order_id, grand_total))                
+
+    @handle_session
+    def view_order_status(self, session, order_id):
+        view_status = view_order_status(session, order_id)
         if view_status:
-            for cos, cd, cosa, dp in view_status:                        
-                print("\nCustomer name: {} \nOrder ID: {} \nDeliver person name: {} \nOrder status: {} \nTotal price: {}".format(
+            for cd, cosa, dp in view_status:
+                print("\nCustomer name: {} \nOrder ID: {} \nDeliver person name: {} \nOrder status: {} \nTotal bill: {}".format(
                     cd.cust_name, cosa.order_id, dp.delivery_person_name, cosa.order_status, cosa.bill_amount))
-    # Printing it 3 times - need to review.

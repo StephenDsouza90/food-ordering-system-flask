@@ -1,4 +1,3 @@
-import time
 from datetime import datetime, timedelta
 
 import constants
@@ -9,19 +8,13 @@ def process_employee_options_flow(fos):
     emp_options = """
     Welcome to the employee interface! Please press the below options:
         
-    0. Quit
-    1. Add food category
-    2. Add food details
-    3. Add delivery person
-    4. Assign delivery person to order 
-    5. Update order (Only for delivery person use)
-    6. View order details
-    7. View order status
-    8. View revenue today
-    9. Delete order
+    0. Quit                                 5. Update order (Only for delivery person use)
+    1. Add food category                    6. View order details
+    2. Add food details                     7. View order status
+    3. Add delivery person                  8. View revenue/sales today
+    4. Assign delivery person to order      9. Delete order
     
     Your Option:
-
     """
 
     employee_options = int(input(emp_options))
@@ -71,13 +64,12 @@ def process_employee_options_flow(fos):
 
         elif employee_options == constants.EMP_OPT_VIEW_ORDER_DETAILS:
             order_id = input("Enter order ID: ")
-            fos.view_orders(order_id)
+            fos.view_order(order_id)
             fos.view_order_grand_total(order_id)
 
         elif employee_options == constants.EMP_OPT_VIEW_ORDER_STATUS:
             order_id = input("Enter order ID: ")
             fos.view_order_status(order_id)
-            fos.view_orders(order_id)
 
         elif employee_options == constants.EMP_OPT_VIEW_REVENUE_TODAY:
             select = """ 
@@ -88,15 +80,14 @@ def process_employee_options_flow(fos):
             3. Delivered
                 
             Your option:                 
-
             """                
             options = int(input(select))
             if options == constants.EMP_OPT_RT_CHECKEDOUT:
-                order_status = "Checkedout"
+                order_status = "'Checkedout'"
             elif options == constants.EMP_OPT_RT_EN_ROUTE:
-                order_status = "En route"
+                order_status = "'En route'"
             else:
-                order_status = "Delivered"
+                order_status = "'Delivered'"
             fos.view_sales_today(order_status)
             fos.sum_revenue_today(order_status)
                 
@@ -109,15 +100,11 @@ def process_employee_options_flow(fos):
 
 def process_order_flow(fos):
     selection = """ 
-    0. Logout
-    1. Process order
-    2. View order
-    3. Checkout
-    4. Cancel order
-    5. View order status
-                
+    0. Logout                   3. Checkout
+    1. Process order            4. Cancel order
+    2. View order               5. View order status
+    
     Select option: 
-
     """
     order = int(input(selection))
 
@@ -130,6 +117,7 @@ def process_order_flow(fos):
         elif order == constants.CUST_OPT_VIEW_ORDER:
             order_id = input("Enter order ID: ")
             fos.view_order(order_id)
+            fos.view_order_grand_total(order_id)
                 
         elif order == constants.CUST_OPT_CHECKOUT:
             order_id = input("Enter order ID: ")
@@ -141,9 +129,9 @@ def process_order_flow(fos):
             delivery_time = timedelta(minutes=30)
             estimated_time = checkout_time + delivery_time
             session = fos.Session()
-            view_grand_total = fos.customer.view_order_grand_total(order_id, session)
+            view_grand_total = fos.common_func.view_order_grand_total(session, order_id) # sums bill
             if view_grand_total:
-                for fd, cos, cd, cosa, grand_total in view_grand_total:
+                for cd, cosa, grand_total in view_grand_total:
                     bill_amount = grand_total
             fos.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount)
 
@@ -156,7 +144,7 @@ def process_order_flow(fos):
 
         elif order == constants.CUST_OPT_VIEW_ORDER_STATUS:
             order_id = input("Enter order ID: ")
-            fos.view_orders_status(order_id)
+            fos.view_order_status(order_id)
 
         order = int(input(selection))               
 
@@ -165,13 +153,10 @@ def process_customer_options_flow(fos):
     cust_options = """ 
     Welcome to the customer interface! Please press the below options:
         
-    0. Quit
-    1. View menu
-    2. Customer signup
-    3. Customer login
-
+    0. Quit                 2. Customer signup
+    1. View menu            3. Customer login
+    
     Your Option:
-
     """        
         
     customer_options = int(input(cust_options))
@@ -212,11 +197,9 @@ def main():
     welcome_message = """ 
     Welcome to the Food Ordering System! Please press the below options:
 
-    1. Employee
-    2. Customer
+    1. Employee             2. Customer
 
     Your Option:
-
     """
 
     option = int(input(welcome_message))
