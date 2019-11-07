@@ -80,6 +80,10 @@ class Controller(SQLiteBackend):
     @handle_session
     def process_order(self, session, cust_id):
         o = self.customer.create_order_id(session, cust_id)
+        if not o:
+            print("Order not generated")
+            return
+
         selection = """        
         0. Back
         1. Add food to order
@@ -87,7 +91,6 @@ class Controller(SQLiteBackend):
         3. Update food to order
                 
         Select option: 
-
         """
         option = int(input(selection))
 
@@ -112,7 +115,7 @@ class Controller(SQLiteBackend):
 
             option = int(input(selection))
         
-        print("Order {}. \nOrder number: {}".format("generated", o.order_id if o else "not generated"))
+        print("\nOrder generated \nOrder number: {}".format(o.order_id))
 
     @handle_session
     def checkout(self, session, order_id, order_status, order_address, checkout_time, estimated_time, bill_amount):
