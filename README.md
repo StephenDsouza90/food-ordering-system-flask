@@ -74,6 +74,16 @@ Connecting to sqlite:///fos2.db
     Add Successfully
 ```
 
+## Order process
+
+The customer can make an order once they have signed up and logged in. 
+
+The customer will proceed to the "Process order" option to make an order after which they can add food items as well as update or remove food items. Once the customer has finalized the selection of food items for their order, an order ID will be generated.
+
+Before confirming (checkout) the order, the customer can view the items in the cart as well as the total bill amount. The customer will then proceed to the "Checkout" option to confirm the order. The customer also has an option to cancel their order. 
+
+The customer can view the items of their order and view the status of their order through the "View order" and "View order status" options respectively.
+
 ## Files
 
 The food ordering system is split into four files i.e. main.py, models.py, core.py and constants.py
