@@ -1,5 +1,6 @@
 import time
 from datetime import datetime, date
+import json
 
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean
 from sqlalchemy import create_engine, func
@@ -71,6 +72,13 @@ class FoodCategory(Base):
     category_id = Column(Integer(), primary_key=True, nullable=False, unique=True, autoincrement=True)
     name = Column(String(30), nullable=False)
 
+    def convert_to_dict(self):
+        obj_dict = {
+            "category_id":self.category_id, 
+            "name":self.name
+            }
+        return obj_dict
+
 
 class FoodDetails(Base):
     """ Represents food details """
@@ -81,6 +89,15 @@ class FoodDetails(Base):
     category_id = Column(Integer(), ForeignKey('food_category.category_id'), nullable=False)
     food_name = Column(String(30), nullable=False)
     price = Column(Integer(), nullable=False)
+
+    def convert_to_dict(self):
+        obj_dict = {
+            "food_id":self.food_id, 
+            "category_id":self.category_id, 
+            "food_name":self.food_name, 
+            "price":self.price
+            }
+        return obj_dict
 
 
 class CustomerDetails(Base):
@@ -93,6 +110,15 @@ class CustomerDetails(Base):
     cust_phone = Column(Integer())
     cust_email = Column(String(30))
 
+    def convert_to_dict(self):
+        obj_dict = {
+            "cust_id":self.cust_id, 
+            "cust_name":self.cust_name,
+            "cust_phone":self.cust_phone, 
+            "cust_email":self.cust_email
+            }
+        return obj_dict
+
 
 class CustOrderSelection(Base):    
     """ Represents food ordered """
@@ -102,6 +128,14 @@ class CustOrderSelection(Base):
     order_id = Column(Integer(), ForeignKey('customer_order_status.order_id'), primary_key=True, nullable=False)
     food_id = Column(Integer(), ForeignKey('food_details.food_id'), primary_key=True)  
     food_qty = Column(Integer())
+
+    def convert_to_dict(self):
+        obj_dict = {
+            "order_id":self.order_id, 
+            "food_id":self.food_id,
+            "food_qty":self.food_qty
+            }
+        return obj_dict
 
 
 class CustOrderStatus(Base):
@@ -117,6 +151,19 @@ class CustOrderStatus(Base):
     order_status = Column(String(30))
     order_address = Column(String(30))
     bill_amount = Column(Integer())
+
+    def convert_to_dict(self):
+        obj_dict = {
+            "order_id":self.order_id, 
+            "cust_id":self.cust_id,
+            "delivery_person_id":self.delivery_person_id,
+            "checkout_time":self.checkout_time, 
+            "estimated_time":self.estimated_time,
+            "order_status":self.order_status, 
+            "order_address":self.order_address,
+            "bill_amount":self.bill_amount
+            }
+        return obj_dict
 
 
 class Employee:
@@ -281,6 +328,13 @@ class DeliveryPerson(Base, Employee):
     delivery_person_name = Column(String(30), nullable=False)
     delivery_person_phone = Column(Integer(), nullable=False)
 
+    def convert_to_dict(self):
+        obj_dict = {
+            "delivery_person_id":self.delivery_person_id, 
+            "delivery_person_name":self.delivery_person_name,
+            "delivery_person_phone":self.delivery_person_phone
+            }
+        return obj_dict
 
     def update_order(self, session, order_id, order_status):
         """ Delivery person can update the order """

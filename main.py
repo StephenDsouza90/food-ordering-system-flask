@@ -129,7 +129,7 @@ def process_order_flow(fos):
             delivery_time = timedelta(minutes=30)
             estimated_time = checkout_time + delivery_time
             session = fos.Session()
-            view_grand_total = fos.common_func.view_order_grand_total(session, order_id) # sums bill
+            view_grand_total = fos.view_order_grand_total(session, order_id)
             if view_grand_total:
                 for cd, cosa, grand_total in view_grand_total:
                     bill_amount = grand_total
@@ -184,15 +184,9 @@ def process_customer_options_flow(fos):
         customer_options = int(input(cust_options))
 
 
-def main():
+def main_user_interface(fos):
     """ The user interface in which employee/customer will use to 
     perform actions on the Food Ordering System. """
-
-    db_url = "sqlite:///fos2.db"
-    print("Connecting to {}".format(db_url))
-
-    fos = Controller(db_url)
-    fos.bootstrap()
 
     welcome_message = """ 
     Welcome to the Food Ordering System! Please press the below options:
@@ -209,5 +203,14 @@ def main():
     
     elif option == constants.CUSTOMER:
         process_customer_options_flow(fos)
+
+
+def main():
+    db_url = "sqlite:///fos2.db"
+    print("Connecting to {}".format(db_url))
+    fos = Controller(db_url)
+    fos.bootstrap()
+    main_user_interface(fos)
+
 
 main()
