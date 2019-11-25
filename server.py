@@ -123,13 +123,10 @@ def create_app(fos):
         """
         order_status = flask.request.json["order_status"]
         sum_rev_today = fos.sum_revenue_today(order_status)
-        if sum_rev_today:
-            sum = sum_rev_today[0]
-            revObj = sum[0]
-            revDictObj = {
-                "today_revenue": revObj
+        revDictObj = {
+            "today_revenue": sum_rev_today
             }
-            return json.dumps(revDictObj)
+        return json.dumps(revDictObj)
 
     @app.route('/employees/delete-order', methods=['DELETE'])
     def delete_order():

@@ -221,7 +221,7 @@ class Employee:
         rev = text("""SELECT IFNULL(SUM(cos.bill_amount), 0) 
             FROM customer_order_status as cos 
             WHERE cos.order_status = {} AND date(cos.checkout_time) = date(CURRENT_DATE);""".format(order_status))
-        result = session.connection().execute(rev).fetchall()
+        result = session.connection().execute(rev).scalar()
         return result
 
     def delete_order(self, session, order_id):

@@ -57,9 +57,7 @@ class Controller(SQLiteBackend):
     @handle_session
     def sum_revenue_today(self, session, order_status):
         sum_rev_today = self.employee.sum_revenue_today(session, order_status)
-        if sum_rev_today:
-            for sum in sum_rev_today:
-                print("\nToday's revenue: {}".format(sum))
+        print("\nToday's revenue: {}".format(sum_rev_today))
         return sum_rev_today
 
     @handle_session
