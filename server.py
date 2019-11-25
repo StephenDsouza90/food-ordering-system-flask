@@ -8,75 +8,92 @@ from core import Controller
 from models import FoodCategory, FoodDetails, CustomerDetails, CustOrderSelection, CustOrderStatus
 
 
-not_found = {"message": "Not Found"}
-success = {"message": "Success"}
-failed = {"message": "Failed"}
-
- 
 def create_app(fos):
     """
     Creates the server app.
     """
     app = Flask('Food Ordering System')
 
-    ### employee routes
-    @app.route('/employee/add_food_category', methods=['POST'])
+    @app.route('/employees/add-food-category', methods=['POST'])
     def add_food_category():
         """
-        >> curl -H "Content-Type: application/json" -X POST -d "{\"name\":\"drinks\"}" "localhost:8080/employee/add_food_category"
+        >> curl -H "Content-Type: application/json" -X POST -d "{\"name\":\"meals\"}" "localhost:8080/employees/add-food-category"
         """
         name = flask.request.json["name"]
-        add = fos.add_food_category(name)
-        return json.dumps("{}".format(success if add else failed))
+        food_category = fos.add_food_category(name)
+        catDictObj = {
+            "category_id": food_category.category_id,
+            "category_name": food_category.name
+        }
+        return json.dumps(catDictObj)
     
-    @app.route('/employee/add_food_details', methods=['POST'])
+    @app.route('/employees/add-food-details', methods=['POST'])
     def add_food_details():
         """
-        >> curl -H "Content-Type: application/json" -X POST -d "{\"category_id\":4, \"food_name\":\"vodka\", \"price\":2}" "localhost:8080/employee/add_food_details"
+        >> curl -H "Content-Type: application/json" -X POST -d "{\"category_id\":1, \"food_name\":\"biryani\", \"price\":5}" "localhost:8080/employees/add-food-details"
         """
         category_id = flask.request.json["category_id"]
         food_name = flask.request.json["food_name"]
         price = flask.request.json["price"]
-        add = fos.add_food_details(category_id, food_name, price)
-        return json.dumps("{}".format(success if add else failed))
+        food_details = fos.add_food_details(category_id, food_name, price)
+        detDictObj = {
+            "category_id": food_details.category_id,
+            "food_id": food_details.food_id,
+            "food_name": food_details.food_name,
+            "food_price": food_details.price
+        }
+        return json.dumps(detDictObj)
 
-    @app.route('/employee/add_delivery_person', methods=['POST'])
+    @app.route('/employees/add-delivery-person', methods=['POST'])
     def add_delivery_person():
         """
-        >> curl -H "Content-Type: application/json" -X POST -d "{\"delivery_person_name\":\"test\", \"delivery_person_phone\":11}" "localhost:8080/employee/add_delivery_person"
+        >> curl -H "Content-Type: application/json" -X POST -d "{\"delivery_person_name\":\"test\", \"delivery_person_phone\":111}" "localhost:8080/employees/add-delivery-person"
         """
         delivery_person_name = flask.request.json["delivery_person_name"]
         delivery_person_phone = flask.request.json["delivery_person_phone"]
-        add = fos.add_delivery_person(delivery_person_name, delivery_person_phone)
-        return json.dumps("{}".format(success if add else failed))
+        delivery_person = fos.add_delivery_person(delivery_person_name, delivery_person_phone)
+        delDictObj = {
+            "delivery_person_id": delivery_person.delivery_person_id,
+            "delivery_person_name": delivery_person.delivery_person_name,
+            "delivery_person_phone": delivery_person.delivery_person_phone
+        }
+        return json.dumps(delDictObj)
 
-    @app.route('/employee/assign_deliver_person_to_deliver_order', methods=['PUT'])
+    @app.route('/employees/assign-deliver-person-to-deliver-order', methods=['PUT'])
     def assign_deliver_person_to_deliver_order():
         """
-        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":9, \"delivery_person_id\":2}" "localhost:8080/employee/assign_deliver_person_to_deliver_order"
+        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":1, \"delivery_person_id\":1}" "localhost:8080/employees/assign-deliver-person-to-deliver-order"
         """
         order_id = flask.request.json["order_id"]
         delivery_person_id = flask.request.json["delivery_person_id"]
-        assign = fos.assign_deliver_person_to_deliver_order(order_id, delivery_person_id)
-        return json.dumps("{}".format(success if assign else failed))
+        fos.assign_deliver_person_to_deliver_order(order_id, delivery_person_id)
+        assignDictObj = {
+            "order_id": order_id,
+            "delivery_person_id": delivery_person_id
+        }
+        return json.dumps(assignDictObj)
 
-    @app.route('/employee/update_order', methods=['PUT'])
+    @app.route('/employees/update-order', methods=['PUT'])
     def update_order():
         """
-        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":9, \"order_status\":\"En route\"}" "localhost:8080/employee/update_order"
-        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":9, \"order_status\":\"Delivered\"}" "localhost:8080/employee/update_order"
+        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":1, \"order_status\":\"En route\"}" "localhost:8080/employees/update-order"
+        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":1, \"order_status\":\"Delivered\"}" "localhost:8080/employees/update-order"
         """
         order_id = flask.request.json["order_id"]
         order_status = flask.request.json["order_status"]
-        update = fos.update_order(order_id, order_status)
-        return json.dumps("{}".format(success if update else failed))
+        fos.update_order(order_id, order_status)
+        updateDictObj = {
+            "order_id": order_id,
+            "order_status": order_status
+        }
+        return json.dumps(updateDictObj)
 
-    @app.route('/employee/view_sales_today', methods=['GET'])
+    @app.route('/employees/view-sales-today', methods=['GET'])
     def view_sales_today():
         """
-        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'Delivered'\"}" "localhost:8080/employee/view_sales_today"
-        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'En route'\"}" "localhost:8080/employee/view_sales_today"
-        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'Checkedout'\"}" "localhost:8080/employee/view_sales_today"
+        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'Delivered'\"}" "localhost:8080/employees/view-sales-today"
+        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'En route'\"}" "localhost:8080/employees/view-sales-today"
+        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'Checkedout'\"}" "localhost:8080/employees/view-sales-today"
         """
         order_status = flask.request.json["order_status"]
         sales_today = fos.view_sales_today(order_status)
@@ -92,54 +109,45 @@ def create_app(fos):
             result.append(sales_dict)
         return json.dumps(result)
 
-    @app.route('/employee/sum_revenue_today', methods=['GET'])
+    @app.route('/employees/sum-revenue-today', methods=['GET'])
     def sum_revenue_today():
         """
-        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'Delivered'\"}" "localhost:8080/employee/sum_revenue_today"
-        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'En route'\"}" "localhost:8080/employee/sum_revenue_today"
-        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'Checkedout'\"}" "localhost:8080/employee/sum_revenue_today"
+        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'Delivered'\"}" "localhost:8080/employees/sum-revenue-today"
+        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'En route'\"}" "localhost:8080/employees/sum-revenue-today"
+        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'Checkedout'\"}" "localhost:8080/employees/sum-revenue-today"
         """
         order_status = flask.request.json["order_status"]
         sum_rev_today = fos.sum_revenue_today(order_status)
-        for sum in sum_rev_today:
+        if sum_rev_today:
+            sum = sum_rev_today[0]
             revObj = sum[0]
-            rev_dict = {
+            revDictObj = {
                 "today_revenue": revObj
             }
-            return json.dumps(rev_dict)
-        print("Not found")
-        return json.dumps(not_found), 404
+            return json.dumps(revDictObj)
 
-    @app.route('/employee/delete_order', methods=['DELETE'])
+    @app.route('/employees/delete-order', methods=['DELETE'])
     def delete_order():
         """
-        >> curl -H "Content-Type: application/json" -XDELETE -d "{\"order_id\":2}" "localhost:8080/employee/delete_order"
+        >> curl -H "Content-Type: application/json" -XDELETE -d "{\"order_id\":1}" "localhost:8080/employees/delete-order"
         """
         order_id = flask.request.json["order_id"]
-        delete = fos.delete_order(order_id)
-        return json.dumps("{}".format(success if delete else failed))
+        fos.delete_order(order_id)
+        delDictObj = {
+            "order_id": order_id
+        }
+        return json.dumps(delDictObj)
     
-    ### customer routes
-    @app.route('/customer/view_menu', methods=['GET'])
+    @app.route('/customers/view-menu', methods=['GET'])
     def view_menu():
         """
-        >> curl localhost:8080/customer/view_menu
+        >> curl localhost:8080/customers/view-menu
         """
         menu = fos.view_menu()
-
-        # List of food objects to be returned to the client
         result = []
-
-        # Loop through each menu item and convert each to a dict
-        # to be compatible for json.
         for m in menu:
-            # m is a tuple(FoodCategory, FoodDetails)
-            # Get the FoodCategory obj from the menu
             foodCatObj = m[0]
-            # Get the FoodDetails obj from the menu
             foodDetObj = m[1]
-
-            # Add converted dict to resulting menu list
             foodDictObj = {
                 "category_id": foodCatObj.category_id,
                 "category_name": foodCatObj.name,
@@ -147,110 +155,97 @@ def create_app(fos):
                 "food_name": foodDetObj.food_name,
                 "price": foodDetObj.price
                 }
-
-            # Add converted dict to resulting menu list
             result.append(foodDictObj)
         return json.dumps(result)
 
-
-    @app.route('/customer/signup', methods=['POST'])
+    @app.route('/customers/signup', methods=['POST'])
     def customer_signup():
         """
-        >> curl -H "Content-Type: application/json" -X POST -d "{\"cust_name\":\"test\", \"cust_phone\":11, \"cust_email\":\"test\"}" "localhost:8080/customer/signup"
+        >> curl -H "Content-Type: application/json" -X POST -d "{\"cust_name\":\"test\", \"cust_phone\":111, \"cust_email\":\"test\"}" "localhost:8080/customers/signup"
         """
-        # Customer information saved in objects
         cust_name = flask.request.json["cust_name"]
         cust_phone = flask.request.json["cust_phone"]
         cust_email = flask.request.json["cust_email"]
-
-        # Information sent to controller to be stored in database
         cust = fos.customer_signup(cust_name, cust_phone, cust_email)
-
-        # Information returned to client
-        cust_obj = {
+        custDictObj = {
             "customer_id": cust.cust_id,
             "customer_name": cust.cust_name
             }
-        return json.dumps(cust_obj)
+        return json.dumps(custDictObj)
 
-    @app.route('/customer/login/<int:cust_id>', methods=['GET'])
+    @app.route('/customers/<int:cust_id>/login', methods=['GET'])
     def customer_login(cust_id):
         """
-        >> curl -X GET "localhost:8080/customer/login/2"
+        >> curl -X GET "localhost:8080/customers/1/login"
         """
         cust = fos.customer_login(cust_id)
-
-        # Converted object to dict        
         custDictObj = cust.convert_to_dict()
-
-        # Returned cust id to client
         cust_id = custDictObj["cust_id"]
-        print("Login successful for cust ID {}".format(cust_id))
         return json.dumps({"cust_id": cust_id})
 
-    @app.route('/customer/create_order/<int:cust_id>', methods=['POST'])
+    @app.route('/customers/<int:cust_id>/create-order', methods=['POST'])
     def create_order(cust_id):
         """
-        >> curl -H "Content-Type: application/json" -X POST -d "{\"cust_id\":2}" "localhost:8080/customer/create_order/2"
+        >> curl -H "Content-Type: application/json" -X POST -d "{\"cust_id\":1}" "localhost:8080/customers/1/create-order"
         """
         cust_id = flask.request.json["cust_id"]
         gen_order_id = fos.create_order(cust_id) 
-        order_obj = {
+        orderDictObj = {
             "customer_id": gen_order_id.cust_id,
             "order_id": gen_order_id.order_id
             }
-        return json.dumps(order_obj)
+        return json.dumps(orderDictObj)
 
-    @app.route('/customer/add_food_to_order/<int:cust_id>', methods=['POST'])
+    @app.route('/customers/<int:cust_id>/add-food-to-order', methods=['POST'])
     def add_food_to_order(cust_id):
         """
-        >> curl -H "Content-Type: application/json" -X POST -d "{\"order_id\":9, \"food_id\":1, \"food_qty\":1}" "localhost:8080/customer/add_food_to_order/2"
+        >> curl -H "Content-Type: application/json" -X POST -d "{\"order_id\":1, \"food_id\":1, \"food_qty\":1}" "localhost:8080/customers/1/add-food-to-order"
         """
         order_id = flask.request.json["order_id"]
         food_id = flask.request.json["food_id"]
         food_qty = flask.request.json["food_qty"]
         add_food = fos.add_food_to_order(order_id, food_id, food_qty) 
-        order_obj = {
+        orderDictObj = {
             "order_id": add_food.order_id,
             "food_id": add_food.food_id,
             "food_qty": add_food.food_qty
             }
-        return json.dumps(order_obj)
+        return json.dumps(orderDictObj)
 
-    @app.route('/customer/update_food_to_order/<int:cust_id>', methods=['PUT'])
+    @app.route('/customers/<int:cust_id>/update-food-to-order', methods=['PUT'])
     def update_process_order(cust_id):
         """
-        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":9, \"food_id\":1, \"food_qty\":2}" "localhost:8080/customer/update_food_to_order/2"
+        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":1, \"food_id\":1, \"food_qty\":2}" "localhost:8080/customers/1/update-food-to-order"
         """
         order_id = flask.request.json["order_id"]
         food_id = flask.request.json["food_id"]
         food_qty = flask.request.json["food_qty"]
         fos.update_food_to_order(order_id, food_id, food_qty)
-        order_obj = {
+        orderDictObj = {
             "order_id": order_id,
             "food_id": food_id,
             "food_qty": food_qty
             }
-        return json.dumps(order_obj)
+        return json.dumps(orderDictObj)
 
-    @app.route('/customer/remove_food_to_order/<int:cust_id>', methods=['DELETE'])
+    @app.route('/customers/<int:cust_id>/remove-food-to-order', methods=['DELETE'])
     def remove_food_to_order(cust_id):
         """
-        >> curl -H "Content-Type: application/json" -XDELETE -d "{\"order_id\":9, \"food_id\":1}" "localhost:8080/customer/remove_food_to_order/2"
+        >> curl -H "Content-Type: application/json" -XDELETE -d "{\"order_id\":1, \"food_id\":2}" "localhost:8080/customers/1/remove-food-to-order"
         """
         order_id = flask.request.json["order_id"]
         food_id = flask.request.json["food_id"]
         fos.remove_food_to_order(order_id, food_id)
-        order_obj = {
+        orderDictObj = {
             "order_id": order_id,
             "food_id": food_id
             }
-        return json.dumps(order_obj)
+        return json.dumps(orderDictObj)
            
-    @app.route('/customer/checkout/<int:cust_id>', methods=['PUT'])
+    @app.route('/customers/<int:cust_id>/checkout', methods=['PUT'])
     def checkout(cust_id):
         """
-        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":9, \"order_address\":\"Karachi\"}" "localhost:8080/customer/checkout/2"
+        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":1, \"order_address\":\"Karachi\"}" "localhost:8080//customers/1/checkout"
         """
         order_id = flask.request.json["order_id"]
         order_status = "Checkedout"
@@ -260,26 +255,35 @@ def create_app(fos):
         estimated_time = checkout_time + delivery_time
         total = fos.view_order_grand_total(order_id)
         if total:
-            for cd, cosa, grand_total in total:
-                bill_amount = grand_total
+            bill_amount = total[0][2]
         fos.checkout(order_id, order_status, order_address, checkout_time, estimated_time, bill_amount)
-        return json.dumps("Checkout successful")
+        checkoutDictObj = {
+            "order_id": order_id,
+            "order_status": order_status,
+            "order_address": order_address,
+            "estimated_time": estimated_time,
+            "bill_amount": bill_amount
+        }
+        return json.dumps(checkoutDictObj)
 
-    @app.route('/customer/cancel_order/<int:cust_id>', methods=['PUT'])
+    @app.route('/customers/<int:cust_id>/cancel-order', methods=['PUT'])
     def cancel_order(cust_id):
         """
-        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":9}" "localhost:8080/customer/cancel_order/2"
+        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":1}" "localhost:8080/customers/1/cancel-order"
         """
         order_id = flask.request.json["order_id"]
         order_status = "Cancelled"
-        fos.cancel_order(order_id, order_status) 
-        return json.dumps("Order cancelled")
+        fos.cancel_order(order_id, order_status)
+        cancelDictObj = {
+            "order_id": order_id,
+            "order_status": order_status
+        }
+        return json.dumps(cancelDictObj)
 
-    ### Common functions
-    @app.route('/customer/view_order/<int:cust_id>', methods=['GET'])
+    @app.route('/customers/<int:cust_id>/view-order', methods=['GET'])
     def view_order(cust_id):
         """
-        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_id\":9}" "localhost:8080/customer/view_order/2"
+        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_id\":1}" "localhost:8080/customers/1/view-order"
         """
         order_id = flask.request.json["order_id"]
         view_order_item = fos.view_order(order_id)
@@ -294,44 +298,38 @@ def create_app(fos):
                 }
             result.append(item_dict)
         return json.dumps(result)
-    # Need to review - some problem with SQLite and session but the func works fine
-    # Create a view order for employee
 
-    @app.route('/customer/view_order_grand_total/<int:cust_id>', methods=['GET'])
+    @app.route('/customers/<int:cust_id>/view-order-grand-total', methods=['GET'])
     def view_order_grand_total(cust_id):
         """
-        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_id\":9}" "localhost:8080/customer/view_order_grand_total/2"
+        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_id\":1}" "localhost:8080/customers/1/view-order-grand-total"
         """
         order_id = flask.request.json["order_id"]
         view_grand_total = fos.view_order_grand_total(order_id)
         for cd, cost, grand_total in view_grand_total:
-            dict_grand_total = {
+            grand_totalDictObj = {
                 "customer_name": cd.cust_name,
                 "order_id": cost.order_id,
                 "grand_total": grand_total
                 }
-        return json.dumps(dict_grand_total)
-    # Need to review - some problem with SQLite and session but the func works fine
-    # Create a view order grand total for employee
+            return json.dumps(grand_totalDictObj)
     
-    @app.route('/customer/view_order_status/<int:cust_id>', methods=['GET'])
+    @app.route('/customers/<int:cust_id>/view-order-status', methods=['GET'])
     def view_order_status(cust_id):
         """
-        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_id\":9}" "localhost:8080/customer/view_order_status/2"
+        >> curl -H "Content-Type: application/json" -X GET -d "{\"order_id\":1}" "localhost:8080/customers/1/view-order-status"
         """
         order_id = flask.request.json["order_id"]
         view_status = fos.view_order_status(order_id)
         for cd, cosa, dp in view_status:
-            dict_status = {
+            statusDictObj = {
                 "customer_name": cd.cust_name,
                 "order_id": cosa.order_id,
                 "delivery_person_name": dp.delivery_person_name,
                 "order_status": cosa.order_status,
                 "total_bill": cosa.bill_amount
                 }
-        return json.dumps(dict_status)
-    # Need to review - some problem with SQLite and session but the func works fine
-    # Create a view_order_status for employee
+            return json.dumps(statusDictObj)
 
     return app
 
