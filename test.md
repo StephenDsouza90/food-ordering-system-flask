@@ -1,6 +1,6 @@
 # Test cases
 
-## Running server:
+## Running server
 
 ```
 Connecting to sqlite:///fos2.db
@@ -54,7 +54,7 @@ curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'Checked
 ```
 curl -H "Content-Type: application/json" -X GET -d "{\"order_status\":\"'Checkedout'\"}" "localhost:8080/employees/sum-revenue-today"
 
-{"today_revenue": null}
+{"today_revenue": 0}
 ```
 
 ## Test Administration:
