@@ -8,6 +8,11 @@ from core import Controller
 from models import FoodCategory, FoodDetails, CustomerDetails, CustOrderSelection, CustOrderStatus
 
 
+not_found = {"message": "Not Found"}
+success = {"message": "Success"}
+failed = {"message": "Failed"}
+
+
 def create_app(fos):
     """
     Creates the server app.
@@ -169,7 +174,8 @@ def create_app(fos):
         cust = fos.customer_signup(cust_name, cust_phone, cust_email)
         custDictObj = {
             "customer_id": cust.cust_id,
-            "customer_name": cust.cust_name
+            "customer_name": cust.cust_name,
+            "customer_email": cust.cust_email
             }
         return json.dumps(custDictObj)
 
@@ -181,7 +187,12 @@ def create_app(fos):
         cust = fos.customer_login(cust_id)
         custDictObj = cust.convert_to_dict()
         cust_id = custDictObj["cust_id"]
-        return json.dumps({"cust_id": cust_id})
+        cust_name = custDictObj["cust_name"]
+        loginDictObj = {
+            "cust_id": cust_id,
+            "cust_name": cust_name
+            }
+        return json.dumps(loginDictObj)
 
     @app.route('/customers/<int:cust_id>/create-order', methods=['POST'])
     def create_order(cust_id):
@@ -204,7 +215,7 @@ def create_app(fos):
         order_id = flask.request.json["order_id"]
         food_id = flask.request.json["food_id"]
         food_qty = flask.request.json["food_qty"]
-        add_food = fos.add_food_to_order(order_id, food_id, food_qty) 
+        add_food = fos.add_food_to_order(order_id, food_id, food_qty)
         orderDictObj = {
             "order_id": add_food.order_id,
             "food_id": add_food.food_id,
@@ -241,11 +252,11 @@ def create_app(fos):
             "food_id": food_id
             }
         return json.dumps(orderDictObj)
-           
+
     @app.route('/customers/<int:cust_id>/checkout', methods=['PUT'])
     def checkout(cust_id):
         """
-        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":1, \"order_address\":\"Karachi\"}" "localhost:8080//customers/1/checkout"
+        >> curl -H "Content-Type: application/json" -X PUT -d "{\"order_id\":1, \"order_address\":\"Karachi\"}" "localhost:8080/customers/1/checkout"
         """
         order_id = flask.request.json["order_id"]
         order_status = "Checkedout"
@@ -273,12 +284,19 @@ def create_app(fos):
         """
         order_id = flask.request.json["order_id"]
         order_status = "Cancelled"
-        fos.cancel_order(order_id, order_status)
-        cancelDictObj = {
-            "order_id": order_id,
-            "order_status": order_status
-        }
-        return json.dumps(cancelDictObj)
+        cancel = fos.cancel_order(order_id, order_status)
+        found_order = False
+        if cancel:
+            cancelDictObj = {
+                "order_id": order_id,
+                "order_status": order_status
+            }
+            found_order = True
+        if found_order:
+            return json.dumps(cancelDictObj)
+        else:
+            print("Order ID {} not found".format(order_id))
+            return json.dumps(not_found), 404    
 
     @app.route('/customers/<int:cust_id>/view-order', methods=['GET'])
     def view_order(cust_id):
@@ -287,6 +305,7 @@ def create_app(fos):
         """
         order_id = flask.request.json["order_id"]
         view_order_item = fos.view_order(order_id)
+        found_result = False
         result = []
         for fc, fd, cos in view_order_item:
             item_dict = {
@@ -297,7 +316,12 @@ def create_app(fos):
                 "total_per_item": (fd.price*cos.food_qty)
                 }
             result.append(item_dict)
-        return json.dumps(result)
+            found_result = True
+        if found_result:
+            return json.dumps(result)
+        else:
+            print("Order ID {} not found".format(order_id))
+            return json.dumps(not_found), 404
 
     @app.route('/customers/<int:cust_id>/view-order-grand-total', methods=['GET'])
     def view_order_grand_total(cust_id):
@@ -330,6 +354,8 @@ def create_app(fos):
                 "total_bill": cosa.bill_amount
                 }
             return json.dumps(statusDictObj)
+        print("Order ID {} not found".format(order_id))
+        return json.dumps(not_found), 404
 
     return app
 
