@@ -218,7 +218,7 @@ class Employee:
     def sum_revenue_today(self, session, order_status):
         """ Sum revenue/sales of today """
 
-        rev = text("""SELECT sum(cos.bill_amount) 
+        rev = text("""SELECT IFNULL(SUM(cos.bill_amount), 0) 
             FROM customer_order_status as cos 
             WHERE cos.order_status = {} AND date(cos.checkout_time) = date(CURRENT_DATE);""".format(order_status))
         result = session.connection().execute(rev).fetchall()
