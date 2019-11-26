@@ -4,7 +4,7 @@
 
 This application is a food ordering system which has two interfaces i.e. Employee and Customer. It can be used via the command line or REST API.
 
-Both users can interact with the system through several options to perfrom an activity.
+Both users can interact with the system through several options to perform an activity.
 
 The Employee and Customer interface are modeled through classes and the options are mapped to the methods in these classes.
 
@@ -16,7 +16,7 @@ The options available to the Customer are view menu, sign up and log in, create 
 
 There are several classes that inherit the Base class from SQLAlchemy in order to create tables. 
 
-These classes are Food Category, Food Details, Customer Details, Customer Order Selection, Customer Order Status and Delivery Person. These classes also include a convert_to_dict method so that the tables can be serialization to a JSON format.
+These classes are Food Category, Food Details, Customer Details, Customer Order Selection, Customer Order Status and Delivery Person. These classes also include a convert_to_dict method so that the tables can serialize to a JSON format so that it can be used in REST APIs.
 
 The property name __tablename__ in these classes direct the name of the table in the DB and the remaining properties are the columns of the table.
 
@@ -147,4 +147,4 @@ Server contains the controllor object which connects to the DB through bootstrap
 
 The employee and customer routes are mapped to their respective functions and the functions call the methods from the Controller class.
 
-The functions in server.py perform a GET, POST, PUT or DELETE command and displays the results in JSON format.
+The functions in server.py perform a GET, POST, PUT and DELETE requests over HTTP REST and returns results in JSON format.
