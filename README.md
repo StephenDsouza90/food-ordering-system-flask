@@ -155,7 +155,7 @@ The functions in server.py perform a GET, POST, PUT and DELETE requests over HTT
 
 Build the image:
 ```
->> docker build -t fos
+>> docker build -t fos .
 ```
 
 Run the container hosting the food ordering system app:
