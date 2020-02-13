@@ -148,3 +148,17 @@ Server contains the controllor object which connects to the DB through bootstrap
 The employee and customer routes are mapped to their respective functions and the functions call the methods from the Controller class.
 
 The functions in server.py perform a GET, POST, PUT and DELETE requests over HTTP REST and returns results in JSON format.
+
+## Docker
+
+### Running in Docker
+
+Build the image:
+```
+>> docker build -t fos .
+```
+
+Run the container hosting the food ordering system app:
+```
+>> docker run -it -p 8080:8080 fos
+```
