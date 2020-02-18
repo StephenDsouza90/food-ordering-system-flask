@@ -117,7 +117,7 @@ The customer can view the items of their order and view the status of their orde
 
 ## Files
 
-The food ordering system is split into four files i.e. main.py, models.py, core.py and constants.py
+The food ordering system is split into several files i.e. main.py, models.py, core.py, constants.py and server.py.
 
 ### main.py
 
